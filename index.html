@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BIG BROTHER — Expenses V1.4</title>
+  <title>BIG BROTHER — Expenses V1.5</title>
 
   <style>
     :root{
@@ -735,7 +735,7 @@
 
     .accrued-toolbar{
       display:grid;
-      grid-template-columns:2fr 1fr 1fr 1fr auto;
+      grid-template-columns:2fr 1.2fr 1fr 1fr 1fr auto;
       gap:8px;
       align-items:end;
       margin-bottom:10px;
@@ -922,6 +922,342 @@
       }
     }
 
+
+    /* =====================================================
+       V1.5 — PAYEE MASTER / GROUPED ACCRUED / BATCH PAYMENT
+       ===================================================== */
+    .payee-picker{
+      position:relative;
+    }
+
+    .payee-input-row{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:7px;
+    }
+
+    .payee-add-btn{
+      min-height:44px;
+      border:0;
+      border-radius:9px;
+      background:#eaf4ff;
+      color:#245fae;
+      padding:8px 10px;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .payee-suggestions{
+      position:absolute;
+      z-index:20;
+      top:100%;
+      left:0;
+      right:0;
+      margin-top:4px;
+      max-height:260px;
+      overflow:auto;
+      border:1px solid #cbd8e7;
+      border-radius:10px;
+      background:#fff;
+      box-shadow:0 14px 32px rgba(29,55,85,.16);
+    }
+
+    .payee-suggestions[hidden]{
+      display:none;
+    }
+
+    .payee-suggestion{
+      width:100%;
+      border:0;
+      border-bottom:1px solid #edf1f5;
+      background:#fff;
+      padding:9px 10px;
+      text-align:left;
+      cursor:pointer;
+    }
+
+    .payee-suggestion:last-child{
+      border-bottom:0;
+    }
+
+    .payee-suggestion:hover{
+      background:#f5f9ff;
+    }
+
+    .payee-suggestion strong{
+      display:block;
+      color:#173f77;
+      font-size:11px;
+    }
+
+    .payee-suggestion small{
+      display:block;
+      margin-top:2px;
+      color:#75879a;
+      font-size:9px;
+    }
+
+    .payee-selected{
+      margin-top:6px;
+      border:1px solid #cfe0f3;
+      border-radius:8px;
+      background:#f7fbff;
+      padding:7px 9px;
+      color:#526b84;
+      font-size:10px;
+    }
+
+    .payee-selected[hidden]{
+      display:none;
+    }
+
+    .payee-modal-overlay,
+    .batch-overlay{
+      position:fixed;
+      inset:0;
+      z-index:10020;
+      display:grid;
+      place-items:center;
+      padding:14px;
+      background:rgba(11,25,44,.62);
+    }
+
+    .payee-modal-overlay[hidden],
+    .batch-overlay[hidden]{
+      display:none;
+    }
+
+    .payee-modal,
+    .batch-modal{
+      width:min(760px,100%);
+      max-height:92vh;
+      overflow:auto;
+      border-radius:14px;
+      background:#fff;
+      box-shadow:0 20px 70px rgba(0,0,0,.28);
+    }
+
+    .payee-modal-head,
+    .batch-modal-head{
+      position:sticky;
+      top:0;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:13px 14px;
+      border-bottom:1px solid #dce5ef;
+      background:#fff;
+    }
+
+    .payee-modal-head h2,
+    .batch-modal-head h2{
+      margin:0;
+      color:#173f77;
+      font-size:17px;
+    }
+
+    .payee-modal-body,
+    .batch-modal-body{
+      padding:14px;
+    }
+
+    .accrued-view-toggle{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .accrued-view-btn{
+      min-height:38px;
+      border:1px solid #cbd8e7;
+      border-radius:9px;
+      background:#fff;
+      color:#526b84;
+      padding:7px 10px;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .accrued-view-btn.active{
+      border-color:#245fae;
+      background:#245fae;
+      color:#fff;
+    }
+
+    .payee-summary-list{
+      display:grid;
+      gap:9px;
+    }
+
+    .payee-summary-card{
+      border:1px solid #dce5ef;
+      border-radius:12px;
+      background:#fff;
+      padding:11px;
+    }
+
+    .payee-summary-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .payee-summary-name{
+      color:#173f77;
+      font-size:15px;
+      font-weight:1000;
+    }
+
+    .payee-summary-meta{
+      margin-top:4px;
+      color:#6d7f93;
+      font-size:10px;
+      line-height:1.5;
+    }
+
+    .payee-summary-total{
+      color:#173f77;
+      font-size:16px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .payee-summary-stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:7px;
+      margin-top:9px;
+    }
+
+    .payee-summary-stat{
+      border:1px solid #edf1f5;
+      border-radius:8px;
+      background:#fbfcfe;
+      padding:7px;
+    }
+
+    .payee-summary-stat small{
+      display:block;
+      color:#7b8da0;
+      font-size:8px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .payee-summary-stat strong{
+      display:block;
+      margin-top:3px;
+      color:#294965;
+      font-size:11px;
+    }
+
+    .payee-summary-actions{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-top:9px;
+    }
+
+    .batch-pay-btn{
+      border:0;
+      border-radius:8px;
+      background:#18864b;
+      color:#fff;
+      min-height:36px;
+      padding:7px 10px;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .view-payee-expenses-btn{
+      border:0;
+      border-radius:8px;
+      background:#eaf4ff;
+      color:#245fae;
+      min-height:36px;
+      padding:7px 10px;
+      font-size:10px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .batch-invoice-list{
+      border:1px solid #dce5ef;
+      border-radius:10px;
+      overflow:auto;
+      max-height:330px;
+      margin:10px 0;
+    }
+
+    .batch-invoice-row{
+      display:grid;
+      grid-template-columns:auto 1.2fr 1fr 1fr 1fr;
+      gap:8px;
+      align-items:center;
+      padding:8px 9px;
+      border-bottom:1px solid #edf1f5;
+      font-size:10px;
+    }
+
+    .batch-invoice-row:last-child{
+      border-bottom:0;
+    }
+
+    .batch-invoice-row input{
+      width:auto;
+      min-height:auto;
+    }
+
+    .batch-total-box{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      border:1px solid #cfe0f3;
+      border-radius:10px;
+      background:#f7fbff;
+      padding:10px;
+      margin:9px 0;
+      color:#294965;
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .batch-total-box strong{
+      color:#173f77;
+      font-size:16px;
+    }
+
+    @media(max-width:760px){
+      .payee-input-row{
+        grid-template-columns:1fr;
+      }
+
+      .payee-summary-top{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+
+      .payee-summary-stats{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .batch-invoice-row{
+        grid-template-columns:auto 1fr;
+      }
+
+      .batch-invoice-row span:nth-child(n+3){
+        grid-column:2;
+      }
+    }
+
 </style>
 </head>
 
@@ -986,8 +1322,29 @@
         </div>
 
         <div class="field">
-          <label for="payee">Payee / Paid To</label>
-          <input id="payee" type="text" autocomplete="off" placeholder="Who received the money?" required>
+          <label for="payeeSearch">Payee / Paid To</label>
+
+          <div class="payee-picker">
+            <div class="payee-input-row">
+              <input
+                id="payeeSearch"
+                type="text"
+                autocomplete="off"
+                placeholder="Search saved Payee..."
+                required
+              >
+
+              <button class="payee-add-btn" type="button" id="addPayeeBtn">
+                + New Payee
+              </button>
+            </div>
+
+            <input id="payeeId" type="hidden">
+
+            <div class="payee-suggestions" id="payeeSuggestions" hidden></div>
+
+            <div class="payee-selected" id="payeeSelectedSummary" hidden></div>
+          </div>
         </div>
 
         <div class="field full">
@@ -1143,6 +1500,13 @@
         </div>
 
         <div class="field">
+          <label for="accruedPayee">Payee</label>
+          <select id="accruedPayee">
+            <option value="">All Payees</option>
+          </select>
+        </div>
+
+        <div class="field">
           <label for="accruedType">Expense Type</label>
           <select id="accruedType">
             <option value="">All Types</option>
@@ -1198,7 +1562,14 @@
 
       <div class="accrued-status-message" id="accruedMessage"></div>
 
-      <div class="accrued-table-wrap">
+      <div class="accrued-view-toggle">
+        <button type="button" class="accrued-view-btn active" id="accruedSummaryViewBtn">Payee Summary</button>
+        <button type="button" class="accrued-view-btn" id="accruedAllViewBtn">All Expenses</button>
+      </div>
+
+      <div id="accruedPayeeSummary"></div>
+
+      <div class="accrued-table-wrap" id="accruedAllExpensesWrap" hidden>
         <table class="accrued-table">
           <thead>
             <tr>
@@ -1336,6 +1707,167 @@
 
 </div>
 
+<div class="payee-modal-overlay" id="payeeModalOverlay" hidden>
+  <div class="payee-modal">
+
+    <div class="payee-modal-head">
+      <h2>➕ Add Expense Payee</h2>
+      <button class="detail-close" type="button" id="payeeModalCloseBtn">✕</button>
+    </div>
+
+    <div class="payee-modal-body">
+      <div class="grid-2">
+
+        <div class="field">
+          <label for="newPayeeName">Payee Name</label>
+          <input id="newPayeeName" type="text" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="newPayeeType">Payee Type</label>
+          <select id="newPayeeType">
+            <option value="SUPPLIER">Supplier</option>
+            <option value="UTILITY">Utility</option>
+            <option value="LANDLORD">Landlord</option>
+            <option value="SERVICE PROVIDER">Service Provider</option>
+            <option value="STAFF">Staff</option>
+            <option value="GOVERNMENT">Government</option>
+            <option value="BANK / FINANCIAL">Bank / Financial</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="newPayeePhone">Phone</label>
+          <input id="newPayeePhone" type="text" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="newPayeeDefaultPayment">Default Payment Method</label>
+          <select id="newPayeeDefaultPayment">
+            <option value="">None</option>
+            <option value="Cash">Cash</option>
+            <option value="ABA">ABA</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Card">Card</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="newPayeeAddress">Address</label>
+          <input id="newPayeeAddress" type="text" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="newPayeeBank">Bank Name</label>
+          <input id="newPayeeBank" type="text" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="newPayeeAccountName">Account Name</label>
+          <input id="newPayeeAccountName" type="text" autocomplete="off">
+        </div>
+
+        <div class="field full">
+          <label for="newPayeeAccountNumber">Account Number</label>
+          <input id="newPayeeAccountNumber" type="text" autocomplete="off">
+        </div>
+
+        <div class="field full">
+          <label for="newPayeeNote">Note</label>
+          <textarea id="newPayeeNote"></textarea>
+        </div>
+      </div>
+
+      <div class="accrued-status-message" id="newPayeeMessage"></div>
+
+      <div class="actions">
+        <button class="btn secondary" type="button" id="payeeModalCancelBtn">Cancel</button>
+        <button class="btn primary" type="button" id="savePayeeBtn">Save Payee</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="batch-overlay" id="batchPaymentOverlay" hidden>
+  <div class="batch-modal">
+
+    <div class="batch-modal-head">
+      <h2>💳 Batch Payment</h2>
+      <button class="detail-close" type="button" id="batchPaymentCloseBtn">✕</button>
+    </div>
+
+    <div class="batch-modal-body">
+      <div class="payment-summary-box">
+        <div class="payment-summary-line">
+          <span>Payee</span>
+          <strong id="batchPayeeName">-</strong>
+        </div>
+
+        <div class="payment-summary-line">
+          <span>Outstanding Expenses</span>
+          <strong id="batchExpenseCount">0</strong>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="batchCurrency">Currency</label>
+          <select id="batchCurrency"></select>
+        </div>
+
+        <div class="field">
+          <label for="batchPaymentDate">Payment Date</label>
+          <input id="batchPaymentDate" type="date">
+        </div>
+      </div>
+
+      <div style="margin-top:9px">
+        <button class="btn secondary" type="button" id="batchSelectAllBtn">Select All Outstanding</button>
+      </div>
+
+      <div class="batch-invoice-list" id="batchInvoiceList"></div>
+
+      <div class="batch-total-box">
+        <span>Selected Batch Total</span>
+        <strong id="batchSelectedTotal">$0.00</strong>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="batchPaymentMethod">Payment Method</label>
+          <select id="batchPaymentMethod">
+            <option value="">Select Payment Method</option>
+          </select>
+        </div>
+
+        <div class="field conditional-payment-field" id="batchRateWrap" hidden>
+          <label for="batchExchangeRate">Exchange Rate (1 USD = KHR)</label>
+          <input id="batchExchangeRate" type="number" min="1" step="1" inputmode="decimal">
+        </div>
+
+        <div class="field full">
+          <label for="batchReferenceNo">Reference No. (Optional)</label>
+          <input id="batchReferenceNo" type="text" autocomplete="off">
+        </div>
+
+        <div class="field full">
+          <label for="batchNote">Note (Optional)</label>
+          <textarea id="batchNote"></textarea>
+        </div>
+      </div>
+
+      <div class="accrued-status-message" id="batchPaymentMessage"></div>
+
+      <div class="actions">
+        <button class="btn secondary" type="button" id="batchPaymentCancelBtn">Cancel</button>
+        <button class="btn primary" type="button" id="batchPaymentConfirmBtn">Confirm Batch Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="payment-overlay" id="expensePaymentOverlay" hidden>
   <div class="payment-modal">
 
@@ -1454,11 +1986,15 @@
   };
 
   var bootstrap = null;
+  var expensePayees = [];
+  var selectedPayeeId = "";
   var allExpenses = [];
   var historyLoaded = false;
   var accruedExpenses = [];
   var accruedLoaded = false;
+  var accruedViewMode = "summary";
   var selectedAccruedExpenseId = "";
+  var selectedBatchPayeeKey = "";
 
   var requestedView = clean(params.get("view")).toLowerCase();
   var currentView =
@@ -1652,6 +2188,281 @@
     return d.toLocaleString();
   }
 
+  function payeeKey(payee){
+    return clean(payee && payee.payeeId) ||
+      clean(payee && payee.payeeName).toLowerCase();
+  }
+
+  function payeeById(payeeId){
+    var id = clean(payeeId);
+
+    return expensePayees.find(function(payee){
+      return clean(payee.payeeId) === id;
+    }) || null;
+  }
+
+  function selectedPayee(){
+    return payeeById(selectedPayeeId);
+  }
+
+  function setSelectedPayee(payee){
+    if(!payee){
+      selectedPayeeId = "";
+      $("payeeId").value = "";
+      $("payeeSelectedSummary").hidden = true;
+      return;
+    }
+
+    selectedPayeeId = clean(payee.payeeId);
+    $("payeeId").value = selectedPayeeId;
+    $("payeeSearch").value = clean(payee.payeeName);
+    $("payeeSuggestions").hidden = true;
+
+    var details = [
+      clean(payee.payeeType),
+      clean(payee.phone),
+      clean(payee.defaultPaymentMethod)
+        ? "Default: " + clean(payee.defaultPaymentMethod)
+        : ""
+    ].filter(Boolean);
+
+    $("payeeSelectedSummary").textContent =
+      clean(payee.payeeName) +
+      (details.length ? " · " + details.join(" · ") : "");
+
+    $("payeeSelectedSummary").hidden = false;
+
+    if(
+      $("paymentStatus").value === "PAID" &&
+      !$("paymentMethod").value &&
+      clean(payee.defaultPaymentMethod)
+    ){
+      $("paymentMethod").value = clean(payee.defaultPaymentMethod);
+    }
+  }
+
+  function renderPayeeSuggestions(){
+    var box = $("payeeSuggestions");
+    var query = clean($("payeeSearch").value).toLowerCase();
+
+    var matches = expensePayees
+      .filter(function(payee){
+        if(payee.active === false) return false;
+
+        if(!query) return true;
+
+        return [
+          payee.payeeName,
+          payee.payeeId,
+          payee.payeeType,
+          payee.phone
+        ]
+          .map(clean)
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      })
+      .slice(0,12);
+
+    if(!matches.length){
+      box.innerHTML =
+        '<div class="history-empty">No Payee found. Use <strong>+ New Payee</strong>.</div>';
+      box.hidden = false;
+      return;
+    }
+
+    box.innerHTML = matches.map(function(payee){
+      return [
+        '<button type="button" class="payee-suggestion" data-payee-id="',
+        esc(payee.payeeId),
+        '">',
+          "<strong>",esc(payee.payeeName),"</strong>",
+          "<small>",
+            esc(payee.payeeId),
+            payee.payeeType ? " · " + esc(payee.payeeType) : "",
+            payee.phone ? " · " + esc(payee.phone) : "",
+          "</small>",
+        "</button>"
+      ].join("");
+    }).join("");
+
+    box.hidden = false;
+
+    box
+      .querySelectorAll("[data-payee-id]")
+      .forEach(function(button){
+        button.addEventListener("click",function(){
+          setSelectedPayee(
+            payeeById(button.dataset.payeeId)
+          );
+
+          $("description").focus();
+        });
+      });
+  }
+
+  function handlePayeeInput(){
+    var current = selectedPayee();
+
+    if(
+      current &&
+      clean($("payeeSearch").value) !== clean(current.payeeName)
+    ){
+      setSelectedPayee(null);
+    }
+
+    renderPayeeSuggestions();
+  }
+
+  function resolveTypedPayee(){
+    if(selectedPayeeId) return;
+
+    var query = clean($("payeeSearch").value).toLowerCase();
+
+    if(!query) return;
+
+    var exact = expensePayees.find(function(payee){
+      return clean(payee.payeeName).toLowerCase() === query;
+    });
+
+    if(exact){
+      setSelectedPayee(exact);
+    }
+  }
+
+  function openPayeeModal(){
+    $("newPayeeName").value = clean($("payeeSearch").value);
+    $("newPayeeType").value = "SUPPLIER";
+    $("newPayeePhone").value = "";
+    $("newPayeeAddress").value = "";
+    $("newPayeeDefaultPayment").value = "";
+    $("newPayeeBank").value = "";
+    $("newPayeeAccountName").value = "";
+    $("newPayeeAccountNumber").value = "";
+    $("newPayeeNote").value = "";
+    $("newPayeeMessage").textContent = "";
+    $("newPayeeMessage").classList.remove("error");
+    $("payeeModalOverlay").hidden = false;
+
+    setTimeout(function(){
+      $("newPayeeName").focus();
+    },30);
+  }
+
+  function closePayeeModal(){
+    $("payeeModalOverlay").hidden = true;
+  }
+
+  function setNewPayeeMessage(message,error){
+    $("newPayeeMessage").textContent = clean(message);
+    $("newPayeeMessage").classList.toggle("error",!!error);
+  }
+
+  function saveNewPayee(){
+    var payeeName = clean($("newPayeeName").value);
+
+    if(!payeeName){
+      setNewPayeeMessage("Payee Name is required.",true);
+      return;
+    }
+
+    var button = $("savePayeeBtn");
+    var oldText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+    setNewPayeeMessage("Saving Payee...",false);
+
+    expenseApiPostAction(
+      "createExpensePayee",
+      {
+        payeeName:payeeName,
+        payeeType:clean($("newPayeeType").value),
+        phone:clean($("newPayeePhone").value),
+        address:clean($("newPayeeAddress").value),
+        defaultPaymentMethod:clean($("newPayeeDefaultPayment").value),
+        bankName:clean($("newPayeeBank").value),
+        accountName:clean($("newPayeeAccountName").value),
+        accountNumber:clean($("newPayeeAccountNumber").value),
+        note:clean($("newPayeeNote").value)
+      }
+    )
+      .then(function(result){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        if(!result || !result.success || !result.payee){
+          setNewPayeeMessage(
+            result && result.error
+              ? result.error
+              : "Could not save Payee.",
+            true
+          );
+          return;
+        }
+
+        var payee = result.payee;
+
+        var existingIndex = expensePayees.findIndex(function(item){
+          return clean(item.payeeId) === clean(payee.payeeId);
+        });
+
+        if(existingIndex >= 0){
+          expensePayees[existingIndex] = payee;
+        }else{
+          expensePayees.push(payee);
+          expensePayees.sort(function(a,b){
+            return clean(a.payeeName).localeCompare(clean(b.payeeName));
+          });
+        }
+
+        fillAccruedPayeeFilter();
+        setSelectedPayee(payee);
+        closePayeeModal();
+      })
+      .catch(function(error){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        setNewPayeeMessage(
+          error && error.message
+            ? error.message
+            : "Could not save Payee.",
+          true
+        );
+      });
+  }
+
+  function fillAccruedPayeeFilter(){
+    var select = $("accruedPayee");
+    if(!select) return;
+
+    var current = clean(select.value);
+
+    select.innerHTML =
+      '<option value="">All Payees</option>';
+
+    expensePayees
+      .filter(function(payee){
+        return payee.active !== false;
+      })
+      .forEach(function(payee){
+        var option = document.createElement("option");
+        option.value = payee.payeeId;
+        option.textContent = payee.payeeName;
+        select.appendChild(option);
+      });
+
+    if(
+      current &&
+      Array.from(select.options).some(function(option){
+        return option.value === current;
+      })
+    ){
+      select.value = current;
+    }
+  }
+
   function setPageView(view){
     if(view === "expense-history"){
       currentView = "expense-history";
@@ -1680,6 +2491,8 @@
       $("pageTitle").textContent = "⏳ BIG BROTHER — Accrued Expenses";
       $("pageSubtitle").textContent = "Outstanding unpaid and partially paid expenses.";
       document.title = "BIG BROTHER — Accrued Expenses";
+
+      setAccruedViewMode(accruedViewMode);
 
       if(!accruedLoaded){
         loadAccruedExpenses();
@@ -1746,6 +2559,7 @@
       .then(function(data){
         accruedExpenses = Array.isArray(data) ? data : [];
         accruedLoaded = true;
+        fillAccruedPayeeFilter();
         renderAccruedExpenses();
       })
       .catch(function(error){
@@ -1832,6 +2646,7 @@
 
   function accruedFilteredExpenses(){
     var query = clean($("accruedSearch").value).toLowerCase();
+    var payeeFilter = clean($("accruedPayee").value);
     var type = clean($("accruedType").value);
     var statusFilter = clean($("accruedStatus").value);
     var currencyFilter = clean($("accruedCurrency").value);
@@ -1839,6 +2654,13 @@
     return accruedExpenses.filter(function(expense){
       var status = clean(expense.status).toUpperCase();
       var due = accruedDueInfo(expense);
+
+      if(
+        payeeFilter &&
+        clean(expense.payeeId) !== payeeFilter
+      ){
+        return false;
+      }
 
       if(type && clean(expense.expenseType) !== type){
         return false;
@@ -1890,6 +2712,184 @@
     });
   }
 
+  function setAccruedViewMode(mode){
+    accruedViewMode = mode === "all"
+      ? "all"
+      : "summary";
+
+    $("accruedSummaryViewBtn").classList.toggle(
+      "active",
+      accruedViewMode === "summary"
+    );
+
+    $("accruedAllViewBtn").classList.toggle(
+      "active",
+      accruedViewMode === "all"
+    );
+
+    $("accruedAllExpensesWrap").hidden =
+      accruedViewMode !== "all";
+
+    $("accruedPayeeSummary").hidden =
+      accruedViewMode !== "summary";
+
+    if(accruedLoaded){
+      renderAccruedExpenses();
+    }
+  }
+
+  function accruedPayeeGroups(rows){
+    var groups = {};
+
+    rows.forEach(function(expense){
+      var key =
+        clean(expense.payeeId) ||
+        "NAME|" + clean(expense.payee).toLowerCase();
+
+      if(!groups[key]){
+        groups[key] = {
+          key:key,
+          payeeId:clean(expense.payeeId),
+          payeeName:clean(expense.payee) || "Unknown Payee",
+          expenses:[]
+        };
+      }
+
+      groups[key].expenses.push(expense);
+    });
+
+    return Object.values(groups)
+      .sort(function(a,b){
+        return a.payeeName.localeCompare(b.payeeName);
+      });
+  }
+
+  function renderAccruedPayeeSummary(rows){
+    var box = $("accruedPayeeSummary");
+
+    if(!rows.length){
+      box.innerHTML =
+        '<div class="history-empty">No outstanding accrued expenses match the current filters.</div>';
+      return;
+    }
+
+    var groups = accruedPayeeGroups(rows);
+
+    box.innerHTML =
+      '<div class="payee-summary-list">' +
+      groups.map(function(group){
+        var totalUsd = 0;
+        var overdue = 0;
+        var oldestDue = null;
+        var currencies = new Set();
+
+        group.expenses.forEach(function(expense){
+          var original = Math.max(0,num(expense.amount));
+          var balance = Math.max(0,num(expense.balance));
+          var amountUsd = Math.max(0,num(expense.amountUSD));
+
+          totalUsd += original > 0
+            ? amountUsd * (balance / original)
+            : 0;
+
+          if(accruedDueInfo(expense).overdue){
+            overdue++;
+          }
+
+          var due = dayStart(expense.dueDate);
+
+          if(
+            due &&
+            (!oldestDue || due.getTime() < oldestDue.getTime())
+          ){
+            oldestDue = due;
+          }
+
+          currencies.add(
+            clean(expense.currency) === "KHR"
+              ? "KHR"
+              : "USD"
+          );
+        });
+
+        var oldestText = oldestDue
+          ? formatDateDDMMYYYY(
+              oldestDue.getFullYear() +
+              "-" +
+              String(oldestDue.getMonth()+1).padStart(2,"0") +
+              "-" +
+              String(oldestDue.getDate()).padStart(2,"0")
+            )
+          : "-";
+
+        return [
+          '<div class="payee-summary-card">',
+            '<div class="payee-summary-top">',
+              "<div>",
+                '<div class="payee-summary-name">',esc(group.payeeName),"</div>",
+                '<div class="payee-summary-meta">',
+                  esc(group.payeeId || "Migrated Payee"),
+                  " · ",
+                  group.expenses.length,
+                  " outstanding expense",
+                  group.expenses.length === 1 ? "" : "s",
+                  " · ",
+                  esc(Array.from(currencies).join(" / ")),
+                "</div>",
+              "</div>",
+              '<div class="payee-summary-total">',
+                esc(formatMoney(totalUsd,"USD")),
+              "</div>",
+            "</div>",
+
+            '<div class="payee-summary-stats">',
+              '<div class="payee-summary-stat"><small>Invoices / Expenses</small><strong>',
+                group.expenses.length,
+              "</strong></div>",
+
+              '<div class="payee-summary-stat"><small>Oldest Due</small><strong>',
+                esc(oldestText),
+              "</strong></div>",
+
+              '<div class="payee-summary-stat"><small>Overdue</small><strong>',
+                overdue,
+              "</strong></div>",
+
+              '<div class="payee-summary-stat"><small>Outstanding USD</small><strong>',
+                esc(formatMoney(totalUsd,"USD")),
+              "</strong></div>",
+            "</div>",
+
+            '<div class="payee-summary-actions">',
+              '<button type="button" class="view-payee-expenses-btn" data-view-payee="',esc(group.payeeId),'">View Expenses</button>',
+              '<button type="button" class="batch-pay-btn" data-batch-payee-key="',esc(group.key),'">Batch Payment</button>',
+            "</div>",
+          "</div>"
+        ].join("");
+      }).join("") +
+      "</div>";
+
+    box
+      .querySelectorAll("[data-view-payee]")
+      .forEach(function(button){
+        button.addEventListener("click",function(){
+          $("accruedPayee").value = clean(button.dataset.viewPayee);
+          accruedViewMode = "all";
+          setAccruedViewMode("all");
+        });
+      });
+
+    box
+      .querySelectorAll("[data-batch-payee-key]")
+      .forEach(function(button){
+        button.addEventListener("click",function(){
+          openBatchPaymentModal(
+            button.dataset.batchPayeeKey
+          );
+        });
+      });
+  }
+
   function renderAccruedExpenses(){
     var rows = accruedFilteredExpenses();
 
@@ -1936,6 +2936,8 @@
       " outstanding expense record" +
       (accruedExpenses.length === 1 ? "" : "s") +
       ".";
+
+    renderAccruedPayeeSummary(rows);
 
     if(!rows.length){
       $("accruedRows").innerHTML =
@@ -1994,6 +2996,254 @@
         });
       });
   }
+
+  function batchGroupByKey(key){
+    return accruedPayeeGroups(accruedExpenses)
+      .find(function(group){
+        return group.key === key;
+      }) || null;
+  }
+
+  function fillBatchPaymentMethods(){
+    var select = $("batchPaymentMethod");
+    select.innerHTML =
+      '<option value="">Select Payment Method</option>';
+
+    var methods = bootstrap && Array.isArray(bootstrap.paymentMethods)
+      ? bootstrap.paymentMethods
+      : ["Cash","ABA","Bank Transfer","Card","Other"];
+
+    methods.forEach(function(method){
+      var option = document.createElement("option");
+      option.value = method;
+      option.textContent = method;
+      select.appendChild(option);
+    });
+  }
+
+  function openBatchPaymentModal(groupKey){
+    var group = batchGroupByKey(groupKey);
+
+    if(!group || !group.expenses.length) return;
+
+    selectedBatchPayeeKey = groupKey;
+
+    $("batchPayeeName").textContent = group.payeeName;
+    $("batchExpenseCount").textContent =
+      group.expenses.length.toLocaleString("en-US");
+
+    var currencies = Array.from(
+      new Set(
+        group.expenses.map(function(expense){
+          return clean(expense.currency) === "KHR"
+            ? "KHR"
+            : "USD";
+        })
+      )
+    );
+
+    $("batchCurrency").innerHTML = currencies.map(function(cur){
+      return '<option value="' + esc(cur) + '">' + esc(cur) + "</option>";
+    }).join("");
+
+    $("batchPaymentDate").value = todayValue();
+    fillBatchPaymentMethods();
+    $("batchReferenceNo").value = "";
+    $("batchNote").value = "";
+    $("batchPaymentMessage").textContent = "";
+    $("batchPaymentMessage").classList.remove("error");
+
+    renderBatchInvoices();
+
+    $("batchPaymentOverlay").hidden = false;
+  }
+
+  function batchCurrentGroup(){
+    return batchGroupByKey(selectedBatchPayeeKey);
+  }
+
+  function renderBatchInvoices(){
+    var group = batchCurrentGroup();
+    if(!group) return;
+
+    var currencyFilter = clean($("batchCurrency").value) || "USD";
+
+    var rows = group.expenses.filter(function(expense){
+      return (
+        clean(expense.currency) === currencyFilter &&
+        num(expense.balance) > 0
+      );
+    });
+
+    $("batchInvoiceList").innerHTML = rows.map(function(expense){
+      return [
+        '<label class="batch-invoice-row">',
+          '<input type="checkbox" class="batch-expense-check" value="',esc(expense.expenseId),'" checked>',
+          '<span><strong>',esc(expense.expenseId),'</strong><br><span class="history-muted">',esc(expense.referenceNo || expense.description),"</span></span>",
+          '<span>Due: ',esc(formatDateDDMMYYYY(expense.dueDate)),"</span>",
+          '<span>Status: ',esc(expense.status),"</span>",
+          '<span><strong>',esc(formatMoney(expense.balance,currencyFilter)),"</strong></span>",
+        "</label>"
+      ].join("");
+    }).join("");
+
+    if(!rows.length){
+      $("batchInvoiceList").innerHTML =
+        '<div class="history-empty">No outstanding expenses in this currency.</div>';
+    }
+
+    $("batchRateWrap").hidden =
+      currencyFilter !== "KHR";
+
+    var firstKHR = rows.find(function(expense){
+      return num(expense.exchangeRate) > 0;
+    });
+
+    $("batchExchangeRate").value =
+      currencyFilter === "KHR"
+        ? String(
+            firstKHR
+              ? num(firstKHR.exchangeRate)
+              : rate()
+          )
+        : "";
+
+    $("batchInvoiceList")
+      .querySelectorAll(".batch-expense-check")
+      .forEach(function(check){
+        check.addEventListener("change",updateBatchSelectedTotal);
+      });
+
+    updateBatchSelectedTotal();
+  }
+
+  function batchSelectedExpenses(){
+    var group = batchCurrentGroup();
+    if(!group) return [];
+
+    var selectedIds = Array.from(
+      $("batchInvoiceList")
+        .querySelectorAll(".batch-expense-check:checked")
+    ).map(function(check){
+      return clean(check.value);
+    });
+
+    return group.expenses.filter(function(expense){
+      return selectedIds.includes(clean(expense.expenseId));
+    });
+  }
+
+  function updateBatchSelectedTotal(){
+    var cur = clean($("batchCurrency").value) || "USD";
+
+    var total = batchSelectedExpenses()
+      .reduce(function(sum,expense){
+        return sum + Math.max(0,num(expense.balance));
+      },0);
+
+    $("batchSelectedTotal").textContent =
+      formatMoney(total,cur);
+  }
+
+  function closeBatchPaymentModal(){
+    $("batchPaymentOverlay").hidden = true;
+    selectedBatchPayeeKey = "";
+  }
+
+  function setBatchMessage(message,error){
+    $("batchPaymentMessage").textContent = clean(message);
+    $("batchPaymentMessage").classList.toggle("error",!!error);
+  }
+
+  function confirmBatchPayment(){
+    var selected = batchSelectedExpenses();
+    var currencyValue = clean($("batchCurrency").value);
+    var paymentDate = clean($("batchPaymentDate").value);
+    var paymentMethod = clean($("batchPaymentMethod").value);
+
+    if(!selected.length){
+      setBatchMessage("Select at least one outstanding expense.",true);
+      return;
+    }
+
+    if(!paymentDate){
+      setBatchMessage("Payment Date is required.",true);
+      return;
+    }
+
+    if(!paymentMethod){
+      setBatchMessage("Payment Method is required.",true);
+      return;
+    }
+
+    var button = $("batchPaymentConfirmBtn");
+    var oldText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+    setBatchMessage("Recording Batch Payment...",false);
+
+    expenseApiPostAction(
+      "recordExpenseBatchPayment",
+      {
+        expenseIds:selected.map(function(expense){
+          return expense.expenseId;
+        }),
+        paymentDate:paymentDate,
+        paymentMethod:paymentMethod,
+        exchangeRate:currencyValue === "KHR"
+          ? num($("batchExchangeRate").value)
+          : 0,
+        referenceNo:clean($("batchReferenceNo").value),
+        note:clean($("batchNote").value)
+      },
+      30000
+    )
+      .then(function(result){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        if(!result || !result.success){
+          setBatchMessage(
+            result && result.error
+              ? result.error
+              : "Could not save Batch Payment.",
+            true
+          );
+          return;
+        }
+
+        closeBatchPaymentModal();
+
+        historyLoaded = false;
+        accruedLoaded = false;
+
+        loadAccruedExpenses();
+
+        setAccruedMessage(
+          "Batch " +
+          clean(result.batch && result.batch.batchId) +
+          " paid " +
+          selected.length +
+          " expense" +
+          (selected.length === 1 ? "" : "s") +
+          ". Cleared expenses moved to Expense History.",
+          false
+        );
+      })
+      .catch(function(error){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        setBatchMessage(
+          error && error.message
+            ? error.message
+            : "Could not save Batch Payment.",
+          true
+        );
+      });
+  }
+
 
   function findExpenseAnywhere(expenseId){
     var id = clean(expenseId);
@@ -2326,6 +3576,7 @@
       ["Expense Date", formatDateDDMMYYYY(expense.expenseDate)],
       ["Expense Type", displayType(expense.expenseType)],
       ["Category", expense.category],
+      ["Payee ID", expense.payeeId || "-"],
       ["Payee / Paid To", expense.payee],
       ["Description", expense.description],
       ["Currency", expense.currency],
@@ -2566,7 +3817,8 @@
       expenseDate:clean($("expenseDate").value),
       expenseType:clean($("expenseType").value),
       category:getCategoryValue(),
-      payee:clean($("payee").value),
+      payeeId:clean($("payeeId").value),
+      payee:clean($("payeeSearch").value),
       description:clean($("description").value),
       currency:currency(),
       exchangeRate:rate(),
@@ -2583,7 +3835,11 @@
     if(!data.expenseDate) return "Expense Date is required.";
     if(!data.expenseType) return "Expense Type is required.";
     if(!data.category) return "Expense Category is required.";
-    if(!data.payee) return "Payee / Paid To is required.";
+    resolveTypedPayee();
+    data.payeeId = clean($("payeeId").value);
+    data.payee = clean($("payeeSearch").value);
+
+    if(!data.payeeId) return "Please select a saved Payee or add a New Payee.";
     if(!data.description) return "Description is required.";
     if(!(data.amount > 0)) return "Amount must be greater than zero.";
     if(data.currency === "KHR" && !(data.exchangeRate > 0)) return "Exchange Rate is required for KHR.";
@@ -2614,6 +3870,12 @@
 
     $("otherCategoryWrap").hidden = true;
     $("otherCategory").value = "";
+
+    selectedPayeeId = "";
+    $("payeeId").value = "";
+    $("payeeSearch").value = "";
+    $("payeeSuggestions").hidden = true;
+    $("payeeSelectedSummary").hidden = true;
 
     loadRatePreference();
     updateConverted();
@@ -2726,6 +3988,11 @@
     )
       .then(function(data){
         bootstrap = data || {};
+        expensePayees = Array.isArray(bootstrap.payees)
+          ? bootstrap.payees
+          : [];
+
+        fillAccruedPayeeFilter();
 
         fillCategories(
           Array.isArray(bootstrap.categories)
@@ -2780,6 +4047,26 @@
 
   $("category").addEventListener("change",handleCategoryChange);
 
+  $("payeeSearch").addEventListener("input",handlePayeeInput);
+  $("payeeSearch").addEventListener("focus",renderPayeeSuggestions);
+  $("payeeSearch").addEventListener("blur",function(){
+    setTimeout(function(){
+      resolveTypedPayee();
+      $("payeeSuggestions").hidden = true;
+    },150);
+  });
+
+  $("addPayeeBtn").addEventListener("click",openPayeeModal);
+  $("payeeModalCloseBtn").addEventListener("click",closePayeeModal);
+  $("payeeModalCancelBtn").addEventListener("click",closePayeeModal);
+  $("savePayeeBtn").addEventListener("click",saveNewPayee);
+
+  $("payeeModalOverlay").addEventListener("click",function(event){
+    if(event.target === $("payeeModalOverlay")){
+      closePayeeModal();
+    }
+  });
+
   $("paymentStatusPaid").addEventListener("click",function(){
     setPaymentStatus("PAID");
   });
@@ -2800,8 +4087,39 @@
 
   $("expenseForm").addEventListener("submit",handleSave);
 
+  $("accruedSummaryViewBtn").addEventListener("click",function(){
+    setAccruedViewMode("summary");
+  });
+
+  $("accruedAllViewBtn").addEventListener("click",function(){
+    setAccruedViewMode("all");
+  });
+
+  $("batchCurrency").addEventListener("change",renderBatchInvoices);
+
+  $("batchSelectAllBtn").addEventListener("click",function(){
+    $("batchInvoiceList")
+      .querySelectorAll(".batch-expense-check")
+      .forEach(function(check){
+        check.checked = true;
+      });
+
+    updateBatchSelectedTotal();
+  });
+
+  $("batchPaymentCloseBtn").addEventListener("click",closeBatchPaymentModal);
+  $("batchPaymentCancelBtn").addEventListener("click",closeBatchPaymentModal);
+  $("batchPaymentConfirmBtn").addEventListener("click",confirmBatchPayment);
+
+  $("batchPaymentOverlay").addEventListener("click",function(event){
+    if(event.target === $("batchPaymentOverlay")){
+      closeBatchPaymentModal();
+    }
+  });
+
   [
     "accruedSearch",
+    "accruedPayee",
     "accruedType",
     "accruedStatus",
     "accruedCurrency"
@@ -2869,6 +4187,8 @@
     if(event.key === "Escape"){
       closeExpenseDetail();
       closeExpensePaymentModal();
+      closePayeeModal();
+      closeBatchPaymentModal();
     }
   });
 
