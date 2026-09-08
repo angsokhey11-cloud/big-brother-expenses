@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BIG BROTHER — Expenses V1.5</title>
+  <title>BIG BROTHER — Expenses V1.6</title>
 
   <style>
     :root{
@@ -1258,6 +1258,28 @@
       }
     }
 
+
+    /* =====================================================
+       V1.6 — SMART SYNC + DEVICE STORAGE
+       ===================================================== */
+    .status-pill.syncing{
+      background:#fff6df;
+      color:#9a6500;
+      border-color:#f0d99d;
+    }
+
+    .status-pill.cached{
+      background:#eef5ff;
+      color:#245fae;
+      border-color:#cfe0f3;
+    }
+
+    .status-pill.offline{
+      background:#fff0ef;
+      color:#c0392b;
+      border-color:#f1c2bd;
+    }
+
 </style>
 </head>
 
@@ -1972,6 +1994,14 @@
 
   var RATE_KEY = "bb_expense_exchange_rate_v1";
 
+  // V1.6 SMART SYNC + DEVICE STORAGE
+  var SMART_CACHE_KEY = "bb_expenses_smart_cache_v1";
+  var ADD_DRAFT_KEY = "bb_expense_add_draft_v1";
+  var SMART_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+  var ADD_DRAFT_MAX_AGE = 24 * 60 * 60 * 1000;
+  var SMART_SYNC_MS = 30000;
+  var SMART_SYNC_DELAY_AFTER_SAVE = 500;
+
   var $ = function(id){
     return document.getElementById(id);
   };
@@ -1995,6 +2025,13 @@
   var accruedViewMode = "summary";
   var selectedAccruedExpenseId = "";
   var selectedBatchPayeeKey = "";
+
+  var expenseRevision = "0";
+  var cacheReady = false;
+  var liveLoaded = false;
+  var syncBusy = false;
+  var revisionBusy = false;
+  var smartSyncTimer = null;
 
   var requestedView = clean(params.get("view")).toLowerCase();
   var currentView =
@@ -2161,21 +2198,39 @@
   }
 
   function formatDateDDMMYYYY(value){
+    // BIG BROTHER default visible date rule: DD-Sep-YYYY
     var raw = clean(value);
     if(!raw) return "-";
+
+    var months = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
 
     var match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
 
     if(match){
-      return match[3] + "/" + match[2] + "/" + match[1];
+      var monthIndex = Number(match[2]) - 1;
+
+      return (
+        match[3] +
+        "-" +
+        (months[monthIndex] || match[2]) +
+        "-" +
+        match[1]
+      );
     }
 
     var d = new Date(raw);
     if(Number.isNaN(d.getTime())) return raw;
 
-    return String(d.getDate()).padStart(2,"0") + "/" +
-      String(d.getMonth()+1).padStart(2,"0") + "/" +
-      d.getFullYear();
+    return (
+      String(d.getDate()).padStart(2,"0") +
+      "-" +
+      months[d.getMonth()] +
+      "-" +
+      d.getFullYear()
+    );
   }
 
   function formatDateTime(value){
@@ -2185,7 +2240,723 @@
     var d = new Date(raw);
     if(Number.isNaN(d.getTime())) return raw;
 
-    return d.toLocaleString();
+    var datePart = formatDateDDMMYYYY(
+      d.getFullYear() +
+      "-" +
+      String(d.getMonth()+1).padStart(2,"0") +
+      "-" +
+      String(d.getDate()).padStart(2,"0")
+    );
+
+    var timePart =
+      String(d.getHours()).padStart(2,"0") +
+      ":" +
+      String(d.getMinutes()).padStart(2,"0");
+
+    return datePart + " " + timePart;
+  }
+
+  function storageGet(key){
+    try{
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    }catch(_){
+      return null;
+    }
+  }
+
+  function storageSet(key,value){
+    try{
+      localStorage.setItem(
+        key,
+        JSON.stringify(value)
+      );
+      return true;
+    }catch(_){
+      return false;
+    }
+  }
+
+  function storageRemove(key){
+    try{
+      localStorage.removeItem(key);
+    }catch(_){}
+  }
+
+  function setDbStatus(text,mode){
+    var box = $("dbStatus");
+    if(!box) return;
+
+    box.textContent = clean(text) || "Expenses Database";
+
+    box.classList.remove(
+      "syncing",
+      "cached",
+      "offline"
+    );
+
+    if(mode){
+      box.classList.add(mode);
+    }
+  }
+
+  function cacheBootstrapSnapshot(){
+    if(!bootstrap) return null;
+
+    return {
+      success:true,
+      version:clean(bootstrap.version),
+      revision:expenseRevision,
+      expenseTypes:Array.isArray(bootstrap.expenseTypes)
+        ? bootstrap.expenseTypes
+        : [],
+      categories:Array.isArray(bootstrap.categories)
+        ? bootstrap.categories
+        : [],
+      paymentMethods:Array.isArray(bootstrap.paymentMethods)
+        ? bootstrap.paymentMethods
+        : [],
+      payeeTypes:Array.isArray(bootstrap.payeeTypes)
+        ? bootstrap.payeeTypes
+        : [],
+      payees:Array.isArray(expensePayees)
+        ? expensePayees
+        : []
+    };
+  }
+
+  function saveSmartCache(){
+    storageSet(
+      SMART_CACHE_KEY,
+      {
+        savedAt:Date.now(),
+        revision:expenseRevision || "0",
+        bootstrap:cacheBootstrapSnapshot(),
+        history:Array.isArray(allExpenses)
+          ? allExpenses
+          : [],
+        accrued:Array.isArray(accruedExpenses)
+          ? accruedExpenses
+          : [],
+        historyLoaded:!!historyLoaded,
+        accruedLoaded:!!accruedLoaded
+      }
+    );
+  }
+
+  function applyBootstrapData(data,fromCache){
+    data = data || {};
+
+    bootstrap = data;
+
+    expensePayees = Array.isArray(data.payees)
+      ? data.payees
+      : [];
+
+    if(data.revision !== undefined && data.revision !== null){
+      expenseRevision = clean(data.revision) || expenseRevision || "0";
+    }
+
+    fillAccruedPayeeFilter();
+
+    fillCategories(
+      Array.isArray(data.categories)
+        ? data.categories
+        : []
+    );
+
+    fillPaymentMethods(
+      Array.isArray(data.paymentMethods)
+        ? data.paymentMethods
+        : []
+    );
+
+    var hiddenPayeeId =
+      clean($("payeeId").value) ||
+      clean(selectedPayeeId);
+
+    if(hiddenPayeeId){
+      var savedPayee =
+        payeeById(hiddenPayeeId);
+
+      if(savedPayee){
+        setSelectedPayee(savedPayee);
+      }
+    }
+
+    if(!fromCache){
+      liveLoaded = true;
+    }
+  }
+
+  function sortHistoryLocal(){
+    allExpenses.sort(function(a,b){
+      var aDate = new Date(
+        clean(a.createdAt) ||
+        clean(a.updatedAt) ||
+        clean(a.expenseDate)
+      ).getTime();
+
+      var bDate = new Date(
+        clean(b.createdAt) ||
+        clean(b.updatedAt) ||
+        clean(b.expenseDate)
+      ).getTime();
+
+      if(Number.isNaN(aDate)) aDate = 0;
+      if(Number.isNaN(bDate)) bDate = 0;
+
+      return bDate - aDate;
+    });
+  }
+
+  function sortAccruedLocal(){
+    accruedExpenses.sort(function(a,b){
+      var aDue = dayStart(a.dueDate);
+      var bDue = dayStart(b.dueDate);
+
+      var aTime = aDue ? aDue.getTime() : Number.MAX_SAFE_INTEGER;
+      var bTime = bDue ? bDue.getTime() : Number.MAX_SAFE_INTEGER;
+
+      if(aTime !== bTime){
+        return aTime - bTime;
+      }
+
+      var aDate = dayStart(a.expenseDate);
+      var bDate = dayStart(b.expenseDate);
+
+      return (
+        (aDate ? aDate.getTime() : 0) -
+        (bDate ? bDate.getTime() : 0)
+      );
+    });
+  }
+
+  function applyHistoryData(data,fromCache){
+    allExpenses = Array.isArray(data)
+      ? data
+      : [];
+
+    historyLoaded = true;
+    sortHistoryLocal();
+
+    if(currentView === "expense-history"){
+      renderExpenseHistory();
+    }
+
+    if(!fromCache){
+      liveLoaded = true;
+    }
+  }
+
+  function applyAccruedData(data,fromCache){
+    accruedExpenses = Array.isArray(data)
+      ? data
+      : [];
+
+    accruedLoaded = true;
+    sortAccruedLocal();
+    fillAccruedPayeeFilter();
+
+    if(currentView === "accrued-expenses"){
+      renderAccruedExpenses();
+    }
+
+    if(!fromCache){
+      liveLoaded = true;
+    }
+  }
+
+  function loadSmartCache(){
+    var cached = storageGet(SMART_CACHE_KEY);
+
+    if(!cached){
+      return false;
+    }
+
+    var age =
+      Date.now() -
+      Number(cached.savedAt || 0);
+
+    if(
+      !Number.isFinite(age) ||
+      age > SMART_CACHE_MAX_AGE
+    ){
+      storageRemove(SMART_CACHE_KEY);
+      return false;
+    }
+
+    expenseRevision =
+      clean(cached.revision) || "0";
+
+    if(cached.bootstrap){
+      applyBootstrapData(
+        cached.bootstrap,
+        true
+      );
+    }
+
+    if(Array.isArray(cached.history)){
+      allExpenses = cached.history;
+      historyLoaded =
+        cached.historyLoaded !== false;
+      sortHistoryLocal();
+    }
+
+    if(Array.isArray(cached.accrued)){
+      accruedExpenses = cached.accrued;
+      accruedLoaded =
+        cached.accruedLoaded !== false;
+      sortAccruedLocal();
+    }
+
+    cacheReady = true;
+    return true;
+  }
+
+  function renderCurrentViewFromState(){
+    if(currentView === "expense-history"){
+      if(historyLoaded){
+        renderExpenseHistory();
+      }
+      return;
+    }
+
+    if(currentView === "accrued-expenses"){
+      if(accruedLoaded){
+        renderAccruedExpenses();
+      }
+    }
+  }
+
+  async function refreshAllExpenseData(options){
+    options = options || {};
+
+    if(syncBusy){
+      return;
+    }
+
+    syncBusy = true;
+
+    if(!options.quiet){
+      setDbStatus("Syncing Expenses Database...","syncing");
+    }
+
+    try{
+      var results = await Promise.all([
+        jsonp(
+          EXPENSE_API,
+          {action:"getExpenseBootstrap"},
+          20000
+        ),
+        jsonp(
+          EXPENSE_API,
+          {
+            action:"getExpenses",
+            status:"PAID"
+          },
+          20000
+        ),
+        jsonp(
+          EXPENSE_API,
+          {action:"getAccruedExpenses"},
+          20000
+        )
+      ]);
+
+      applyBootstrapData(
+        results[0] || {},
+        false
+      );
+
+      applyHistoryData(
+        results[1],
+        false
+      );
+
+      applyAccruedData(
+        results[2],
+        false
+      );
+
+      saveSmartCache();
+
+      setDbStatus(
+        "Synced · " +
+        (
+          clean(bootstrap && bootstrap.version) ||
+          "Expenses Database"
+        )
+      );
+
+      if(
+        currentView === "add-expense" &&
+        !clean($("status").textContent)
+      ){
+        setStatus("Ready to add expense.",false);
+      }
+
+    }catch(error){
+      if(cacheReady){
+        setDbStatus(
+          "Saved Device · Live Sync Unavailable",
+          "offline"
+        );
+      }else{
+        setDbStatus(
+          "Database Connection Error",
+          "offline"
+        );
+      }
+
+      if(
+        currentView === "add-expense" &&
+        !cacheReady
+      ){
+        setStatus(
+          error && error.message
+            ? error.message
+            : "Could not connect to Expenses Database.",
+          true
+        );
+      }
+
+    }finally{
+      syncBusy = false;
+    }
+  }
+
+  function scheduleSilentSync(delay){
+    clearTimeout(scheduleSilentSync.timer);
+
+    scheduleSilentSync.timer = setTimeout(
+      function(){
+        refreshAllExpenseData({
+          quiet:true
+        });
+      },
+      Number(delay) || SMART_SYNC_DELAY_AFTER_SAVE
+    );
+  }
+
+  async function checkExpenseRevision(){
+    if(
+      revisionBusy ||
+      syncBusy ||
+      document.hidden
+    ){
+      return;
+    }
+
+    revisionBusy = true;
+
+    try{
+      var result = await jsonp(
+        EXPENSE_API,
+        {action:"getExpenseRevision"},
+        10000
+      );
+
+      var nextRevision =
+        clean(
+          result && typeof result === "object"
+            ? result.revision
+            : result
+        ) || "0";
+
+      if(
+        expenseRevision !== "0" &&
+        nextRevision !== "0" &&
+        nextRevision !== expenseRevision
+      ){
+        setDbStatus(
+          "Changes Found · Syncing...",
+          "syncing"
+        );
+
+        await refreshAllExpenseData({
+          quiet:true
+        });
+
+      }else if(
+        expenseRevision === "0" &&
+        nextRevision !== "0"
+      ){
+        expenseRevision = nextRevision;
+        saveSmartCache();
+      }
+
+    }catch(_){
+      // Smart sync must never block the user.
+    }finally{
+      revisionBusy = false;
+    }
+  }
+
+  function startSmartSync(){
+    clearInterval(smartSyncTimer);
+
+    smartSyncTimer = setInterval(
+      checkExpenseRevision,
+      SMART_SYNC_MS
+    );
+  }
+
+  function removeExpenseFromArray(list,expenseId){
+    var id = clean(expenseId);
+
+    return list.filter(function(item){
+      return clean(item.expenseId) !== id;
+    });
+  }
+
+  function upsertConfirmedExpense(expense,revision){
+    if(!expense || !clean(expense.expenseId)){
+      return;
+    }
+
+    if(revision !== undefined && revision !== null){
+      expenseRevision =
+        clean(revision) ||
+        expenseRevision ||
+        "0";
+    }
+
+    var id = clean(expense.expenseId);
+    var status =
+      clean(expense.status).toUpperCase();
+
+    allExpenses =
+      removeExpenseFromArray(
+        allExpenses,
+        id
+      );
+
+    accruedExpenses =
+      removeExpenseFromArray(
+        accruedExpenses,
+        id
+      );
+
+    if(status === "PAID"){
+      allExpenses.unshift(expense);
+      historyLoaded = true;
+      sortHistoryLocal();
+    }else{
+      accruedExpenses.push(expense);
+      accruedLoaded = true;
+      sortAccruedLocal();
+    }
+
+    saveSmartCache();
+    renderCurrentViewFromState();
+  }
+
+  function applyBatchPaymentConfirmed(
+    selected,
+    result,
+    paymentMethod,
+    referenceNo
+  ){
+    var revision =
+      result && result.revision !== undefined
+        ? result.revision
+        : expenseRevision;
+
+    if(revision !== undefined && revision !== null){
+      expenseRevision =
+        clean(revision) ||
+        expenseRevision ||
+        "0";
+    }
+
+    var now = new Date().toISOString();
+
+    selected.forEach(function(expense){
+      var paidExpense = Object.assign(
+        {},
+        expense,
+        {
+          status:"PAID",
+          paidAmount:num(expense.amount),
+          balance:0,
+          paymentMethod:paymentMethod,
+          referenceNo:referenceNo || expense.referenceNo,
+          updatedAt:now
+        }
+      );
+
+      var id = clean(expense.expenseId);
+
+      accruedExpenses =
+        removeExpenseFromArray(
+          accruedExpenses,
+          id
+        );
+
+      allExpenses =
+        removeExpenseFromArray(
+          allExpenses,
+          id
+        );
+
+      allExpenses.unshift(paidExpense);
+    });
+
+    historyLoaded = true;
+    accruedLoaded = true;
+
+    sortHistoryLocal();
+    sortAccruedLocal();
+    saveSmartCache();
+    renderCurrentViewFromState();
+  }
+
+  function saveAddDraft(){
+    var data = {
+      savedAt:Date.now(),
+      expenseDate:clean($("expenseDate").value),
+      expenseType:clean($("expenseType").value),
+      category:clean($("category").value),
+      otherCategory:clean($("otherCategory").value),
+      payeeId:clean($("payeeId").value),
+      payeeSearch:clean($("payeeSearch").value),
+      description:clean($("description").value),
+      currency:clean($("currency").value),
+      amount:clean($("amount").value),
+      exchangeRate:clean($("exchangeRate").value),
+      paymentStatus:clean($("paymentStatus").value),
+      paymentMethod:clean($("paymentMethod").value),
+      dueDate:clean($("dueDate").value),
+      referenceNo:clean($("referenceNo").value),
+      note:clean($("note").value)
+    };
+
+    storageSet(
+      ADD_DRAFT_KEY,
+      data
+    );
+  }
+
+  function scheduleDraftSave(){
+    clearTimeout(scheduleDraftSave.timer);
+
+    scheduleDraftSave.timer = setTimeout(
+      saveAddDraft,
+      250
+    );
+  }
+
+  function clearAddDraft(){
+    storageRemove(ADD_DRAFT_KEY);
+  }
+
+  function restoreAddDraft(){
+    var draft = storageGet(ADD_DRAFT_KEY);
+
+    if(!draft){
+      return false;
+    }
+
+    var age =
+      Date.now() -
+      Number(draft.savedAt || 0);
+
+    if(
+      !Number.isFinite(age) ||
+      age > ADD_DRAFT_MAX_AGE
+    ){
+      clearAddDraft();
+      return false;
+    }
+
+    if(draft.expenseDate){
+      $("expenseDate").value =
+        clean(draft.expenseDate);
+    }
+
+    if(draft.expenseType){
+      setExpenseType(
+        clean(draft.expenseType)
+      );
+    }
+
+    if(draft.category){
+      $("category").value =
+        clean(draft.category);
+
+      handleCategoryChange();
+    }
+
+    if(draft.otherCategory){
+      $("otherCategory").value =
+        clean(draft.otherCategory);
+    }
+
+    if(draft.currency){
+      setCurrency(
+        clean(draft.currency)
+      );
+    }
+
+    if(draft.amount !== undefined){
+      $("amount").value =
+        clean(draft.amount);
+    }
+
+    if(draft.exchangeRate){
+      $("exchangeRate").value =
+        clean(draft.exchangeRate);
+    }
+
+    if(draft.paymentStatus){
+      setPaymentStatus(
+        clean(draft.paymentStatus)
+      );
+    }
+
+    if(draft.paymentMethod){
+      $("paymentMethod").value =
+        clean(draft.paymentMethod);
+    }
+
+    if(draft.dueDate){
+      $("dueDate").value =
+        clean(draft.dueDate);
+    }
+
+    $("description").value =
+      clean(draft.description);
+
+    $("referenceNo").value =
+      clean(draft.referenceNo);
+
+    $("note").value =
+      clean(draft.note);
+
+    var draftPayeeId =
+      clean(draft.payeeId);
+
+    var payee =
+      draftPayeeId
+        ? payeeById(draftPayeeId)
+        : null;
+
+    if(payee){
+      setSelectedPayee(payee);
+    }else{
+      selectedPayeeId =
+        draftPayeeId;
+
+      $("payeeId").value =
+        draftPayeeId;
+
+      $("payeeSearch").value =
+        clean(draft.payeeSearch);
+    }
+
+    updateConverted();
+    return true;
   }
 
   function payeeKey(payee){
@@ -2239,6 +3010,8 @@
     ){
       $("paymentMethod").value = clean(payee.defaultPaymentMethod);
     }
+
+    scheduleDraftSave();
   }
 
   function renderPayeeSuggestions(){
@@ -2416,9 +3189,21 @@
           });
         }
 
+        if(result.revision !== undefined){
+          expenseRevision =
+            clean(result.revision) ||
+            expenseRevision ||
+            "0";
+        }
+
         fillAccruedPayeeFilter();
         setSelectedPayee(payee);
+        saveSmartCache();
         closePayeeModal();
+
+        // Local/device data is already updated.
+        // Reconcile quietly with the live database.
+        scheduleSilentSync();
       })
       .catch(function(error){
         button.disabled = false;
@@ -2507,11 +3292,28 @@
     }
   }
 
-  function loadExpenseHistory(){
-    $("historyRows").innerHTML =
-      '<tr><td colspan="13" class="history-loading">Loading Expense History...</td></tr>';
+  function loadExpenseHistory(forceLive){
+    forceLive = !!forceLive;
 
-    $("historyCountText").textContent = "";
+    if(
+      historyLoaded &&
+      !forceLive
+    ){
+      renderExpenseHistory();
+
+      if(!liveLoaded){
+        scheduleSilentSync(50);
+      }
+
+      return;
+    }
+
+    if(!historyLoaded){
+      $("historyRows").innerHTML =
+        '<tr><td colspan="13" class="history-loading">Loading Expense History...</td></tr>';
+
+      $("historyCountText").textContent = "";
+    }
 
     jsonp(
       EXPENSE_API,
@@ -2521,11 +3323,23 @@
       }
     )
       .then(function(data){
-        allExpenses = Array.isArray(data) ? data : [];
-        historyLoaded = true;
-        renderExpenseHistory();
+        applyHistoryData(
+          Array.isArray(data) ? data : [],
+          false
+        );
+
+        saveSmartCache();
       })
       .catch(function(error){
+        if(historyLoaded){
+          renderExpenseHistory();
+          setDbStatus(
+            "Saved Device · Live Sync Unavailable",
+            "offline"
+          );
+          return;
+        }
+
         $("historyRows").innerHTML =
           '<tr><td colspan="13" class="history-empty">' +
             esc(error && error.message ? error.message : "Could not load Expense History.") +
@@ -2543,12 +3357,29 @@
     $("accruedMessage").classList.toggle("error",!!error);
   }
 
-  function loadAccruedExpenses(){
-    $("accruedRows").innerHTML =
-      '<tr><td colspan="14" class="history-loading">Loading Accrued Expenses...</td></tr>';
+  function loadAccruedExpenses(forceLive){
+    forceLive = !!forceLive;
 
-    $("accruedCountText").textContent = "";
-    setAccruedMessage("",false);
+    if(
+      accruedLoaded &&
+      !forceLive
+    ){
+      renderAccruedExpenses();
+
+      if(!liveLoaded){
+        scheduleSilentSync(50);
+      }
+
+      return;
+    }
+
+    if(!accruedLoaded){
+      $("accruedRows").innerHTML =
+        '<tr><td colspan="14" class="history-loading">Loading Accrued Expenses...</td></tr>';
+
+      $("accruedCountText").textContent = "";
+      setAccruedMessage("",false);
+    }
 
     jsonp(
       EXPENSE_API,
@@ -2557,12 +3388,25 @@
       }
     )
       .then(function(data){
-        accruedExpenses = Array.isArray(data) ? data : [];
-        accruedLoaded = true;
-        fillAccruedPayeeFilter();
-        renderAccruedExpenses();
+        applyAccruedData(
+          Array.isArray(data) ? data : [],
+          false
+        );
+
+        saveSmartCache();
       })
       .catch(function(error){
+        if(accruedLoaded){
+          renderAccruedExpenses();
+
+          setDbStatus(
+            "Saved Device · Live Sync Unavailable",
+            "offline"
+          );
+
+          return;
+        }
+
         $("accruedRows").innerHTML =
           '<tr><td colspan="14" class="history-empty">' +
             esc(error && error.message ? error.message : "Could not load Accrued Expenses.") +
@@ -3213,12 +4057,20 @@
           return;
         }
 
+        var batchPaymentMethod =
+          clean($("batchPaymentMethod").value);
+
+        var batchReferenceNo =
+          clean($("batchReferenceNo").value);
+
         closeBatchPaymentModal();
 
-        historyLoaded = false;
-        accruedLoaded = false;
-
-        loadAccruedExpenses();
+        applyBatchPaymentConfirmed(
+          selected,
+          result,
+          batchPaymentMethod,
+          batchReferenceNo
+        );
 
         setAccruedMessage(
           "Batch " +
@@ -3230,6 +4082,8 @@
           ". Cleared expenses moved to Expense History.",
           false
         );
+
+        scheduleSilentSync();
       })
       .catch(function(error){
         button.disabled = false;
@@ -3403,10 +4257,10 @@
 
         closeExpensePaymentModal();
 
-        historyLoaded = false;
-        accruedLoaded = false;
-
-        loadAccruedExpenses();
+        upsertConfirmedExpense(
+          result.expense,
+          result.revision
+        );
 
         var newStatus = clean(result.expense && result.expense.status);
 
@@ -3421,6 +4275,8 @@
             false
           );
         }
+
+        scheduleSilentSync();
       })
       .catch(function(error){
         button.disabled = false;
@@ -3856,6 +4712,7 @@
   }
 
   function clearForm(){
+    clearAddDraft();
     $("expenseForm").reset();
 
     setExpenseType("OPERATING EXPENSE");
@@ -3950,9 +4807,18 @@
         }
 
         setStatus("Expense saved successfully.",false);
-        historyLoaded = false;
-        accruedLoaded = false;
+
+        upsertConfirmedExpense(
+          result.expense,
+          result.revision
+        );
+
+        clearAddDraft();
         showSuccess(result);
+
+        // Save is already confirmed by the backend.
+        // No blocking full reload; reconcile quietly.
+        scheduleSilentSync();
       })
       .catch(function(error){
         button.disabled = false;
@@ -3974,56 +4840,50 @@
     setExpenseType("OPERATING EXPENSE");
     setPaymentStatus("PAID");
 
-    // V1.4: apply the route immediately.
-    // Expense History no longer waits for bootstrap/categories/payment methods.
+    // V1.6 FAST START:
+    // 1) Device storage renders immediately.
+    // 2) Live data reconciles quietly.
+    // 3) Tiny revision endpoint checks every 30 seconds.
+    var hasCache = loadSmartCache();
+
+    restoreAddDraft();
+
     setPageView(currentView);
 
-    $("dbStatus").textContent = "Connecting Expenses Database...";
+    if(hasCache){
+      setDbStatus(
+        "Saved Device · Syncing...",
+        "cached"
+      );
 
-    jsonp(
-      EXPENSE_API,
-      {
-        action:"getExpenseBootstrap"
-      }
-    )
-      .then(function(data){
-        bootstrap = data || {};
-        expensePayees = Array.isArray(bootstrap.payees)
-          ? bootstrap.payees
-          : [];
+      renderCurrentViewFromState();
 
-        fillAccruedPayeeFilter();
-
-        fillCategories(
-          Array.isArray(bootstrap.categories)
-            ? bootstrap.categories
-            : []
-        );
-
-        fillPaymentMethods(
-          Array.isArray(bootstrap.paymentMethods)
-            ? bootstrap.paymentMethods
-            : []
-        );
-
-        $("dbStatus").textContent = "Expenses Database Ready";
-
-        if(currentView === "add-expense"){
-          setStatus("Ready to add expense.",false);
-        }
-      })
-      .catch(function(error){
-        $("dbStatus").textContent = "Database Error";
-
-        if(currentView === "add-expense"){
-          setStatus(
-            error && error.message
-              ? error.message
-              : "Could not prepare Expenses Database.",
-            true
-          );
-        }
+      refreshAllExpenseData({
+        quiet:true
       });
+
+    }else{
+      setDbStatus(
+        "Connecting Expenses Database...",
+        "syncing"
+      );
+
+      refreshAllExpenseData({
+        quiet:false
+      });
+    }
+
+    startSmartSync();
+
+    if(
+      currentView === "add-expense" &&
+      hasCache
+    ){
+      setStatus(
+        "Ready to add expense. Saved device data is available while live sync runs.",
+        false
+      );
+    }
   }
 
   document.querySelectorAll(".type-btn").forEach(function(button){
@@ -4087,6 +4947,55 @@
 
   $("expenseForm").addEventListener("submit",handleSave);
 
+  [
+    "expenseDate",
+    "category",
+    "otherCategory",
+    "payeeSearch",
+    "description",
+    "amount",
+    "exchangeRate",
+    "paymentMethod",
+    "dueDate",
+    "referenceNo",
+    "note"
+  ].forEach(function(id){
+    var element = $(id);
+
+    if(!element) return;
+
+    element.addEventListener(
+      element.tagName === "SELECT"
+        ? "change"
+        : "input",
+      scheduleDraftSave
+    );
+
+    element.addEventListener(
+      "change",
+      scheduleDraftSave
+    );
+  });
+
+  ["currencyUSD","currencyKHR","paymentStatusPaid","paymentStatusUnpaid"]
+    .forEach(function(id){
+      var element = $(id);
+
+      if(element){
+        element.addEventListener(
+          "click",
+          scheduleDraftSave
+        );
+      }
+    });
+
+  document.querySelectorAll(".type-btn").forEach(function(button){
+    button.addEventListener(
+      "click",
+      scheduleDraftSave
+    );
+  });
+
   $("accruedSummaryViewBtn").addEventListener("click",function(){
     setAccruedViewMode("summary");
   });
@@ -4137,8 +5046,9 @@
   });
 
   $("accruedRefreshBtn").addEventListener("click",function(){
-    accruedLoaded = false;
-    loadAccruedExpenses();
+    setDbStatus("Refreshing Accrued Expenses...","syncing");
+    loadAccruedExpenses(true);
+    checkExpenseRevision();
   });
 
   $("expensePaymentCloseBtn").addEventListener("click",closeExpensePaymentModal);
@@ -4171,8 +5081,9 @@
   });
 
   $("historyRefreshBtn").addEventListener("click",function(){
-    historyLoaded = false;
-    loadExpenseHistory();
+    setDbStatus("Refreshing Expense History...","syncing");
+    loadExpenseHistory(true);
+    checkExpenseRevision();
   });
 
   $("detailCloseBtn").addEventListener("click",closeExpenseDetail);
@@ -4190,6 +5101,61 @@
       closePayeeModal();
       closeBatchPaymentModal();
     }
+  });
+
+  document.addEventListener("visibilitychange",function(){
+    if(!document.hidden){
+      checkExpenseRevision();
+    }
+  });
+
+  window.addEventListener("focus",function(){
+    checkExpenseRevision();
+  });
+
+  window.addEventListener("storage",function(event){
+    if(
+      event.key !== SMART_CACHE_KEY ||
+      !event.newValue
+    ){
+      return;
+    }
+
+    try{
+      var cached = JSON.parse(event.newValue);
+
+      if(!cached) return;
+
+      expenseRevision =
+        clean(cached.revision) ||
+        expenseRevision ||
+        "0";
+
+      if(cached.bootstrap){
+        applyBootstrapData(
+          cached.bootstrap,
+          true
+        );
+      }
+
+      if(Array.isArray(cached.history)){
+        allExpenses = cached.history;
+        historyLoaded =
+          cached.historyLoaded !== false;
+        sortHistoryLocal();
+      }
+
+      if(Array.isArray(cached.accrued)){
+        accruedExpenses = cached.accrued;
+        accruedLoaded =
+          cached.accruedLoaded !== false;
+        sortAccruedLocal();
+      }
+
+      cacheReady = true;
+      renderCurrentViewFromState();
+
+    }catch(_){}
   });
 
   window.addEventListener("message",function(event){
