@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BIG BROTHER — Expenses V1.6</title>
+  <title>BIG BROTHER — Expenses V1.7</title>
 
   <style>
     :root{
@@ -1260,7 +1260,7 @@
 
 
     /* =====================================================
-       V1.6 — SMART SYNC + DEVICE STORAGE
+       V1.7 — FAST SMART SYNC + DEVICE STORAGE
        ===================================================== */
     .status-pill.syncing{
       background:#fff6df;
@@ -1994,7 +1994,7 @@
 
   var RATE_KEY = "bb_expense_exchange_rate_v1";
 
-  // V1.6 SMART SYNC + DEVICE STORAGE
+  // V1.7 FAST SMART SYNC + DEVICE STORAGE
   var SMART_CACHE_KEY = "bb_expenses_smart_cache_v1";
   var ADD_DRAFT_KEY = "bb_expense_add_draft_v1";
   var SMART_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -2539,52 +2539,68 @@
     syncBusy = true;
 
     if(!options.quiet){
-      setDbStatus("Syncing Expenses Database...","syncing");
+      setDbStatus(
+        "Syncing Expenses Database...",
+        "syncing"
+      );
     }
 
     try{
-      var results = await Promise.all([
-        jsonp(
-          EXPENSE_API,
-          {action:"getExpenseBootstrap"},
-          20000
-        ),
-        jsonp(
-          EXPENSE_API,
-          {
-            action:"getExpenses",
-            status:"PAID"
-          },
-          20000
-        ),
-        jsonp(
-          EXPENSE_API,
-          {action:"getAccruedExpenses"},
-          20000
-        )
-      ]);
+      // V1.7: ONE request returns Bootstrap + Payees +
+      // PAID History + Accrued Expenses + Revision.
+      // This replaces the old 3 parallel API requests.
+      var snapshot = await jsonp(
+        EXPENSE_API,
+        {
+          action:"getExpenseSyncSnapshot"
+        },
+        30000
+      );
+
+      if(
+        !snapshot ||
+        snapshot.success === false
+      ){
+        throw new Error(
+          snapshot && snapshot.error
+            ? snapshot.error
+            : "Expenses Database sync failed."
+        );
+      }
 
       applyBootstrapData(
-        results[0] || {},
+        snapshot,
         false
       );
 
       applyHistoryData(
-        results[1],
+        Array.isArray(snapshot.history)
+          ? snapshot.history
+          : [],
         false
       );
 
       applyAccruedData(
-        results[2],
+        Array.isArray(snapshot.accrued)
+          ? snapshot.accrued
+          : [],
         false
       );
 
+      if(snapshot.revision !== undefined){
+        expenseRevision =
+          clean(snapshot.revision) ||
+          expenseRevision ||
+          "0";
+      }
+
+      cacheReady = true;
       saveSmartCache();
 
       setDbStatus(
         "Synced · " +
         (
-          clean(bootstrap && bootstrap.version) ||
+          clean(snapshot.version) ||
           "Expenses Database"
         )
       );
@@ -2593,32 +2609,51 @@
         currentView === "add-expense" &&
         !clean($("status").textContent)
       ){
-        setStatus("Ready to add expense.",false);
+        setStatus(
+          "Ready to add expense.",
+          false
+        );
       }
 
     }catch(error){
+      var message =
+        error && error.message
+          ? error.message
+          : "Could not sync Expenses Database.";
+
       if(cacheReady){
         setDbStatus(
           "Saved Device · Live Sync Unavailable",
           "offline"
         );
+
+        renderCurrentViewFromState();
+
       }else{
         setDbStatus(
           "Database Connection Error",
           "offline"
         );
-      }
 
-      if(
-        currentView === "add-expense" &&
-        !cacheReady
-      ){
-        setStatus(
-          error && error.message
-            ? error.message
-            : "Could not connect to Expenses Database.",
-          true
-        );
+        if(currentView === "accrued-expenses"){
+          setAccruedMessage(message,true);
+
+          $("accruedRows").innerHTML =
+            '<tr><td colspan="14" class="history-empty">' +
+              esc(message) +
+            '</td></tr>';
+        }
+
+        if(currentView === "expense-history"){
+          $("historyRows").innerHTML =
+            '<tr><td colspan="13" class="history-empty">' +
+              esc(message) +
+            '</td></tr>';
+        }
+
+        if(currentView === "add-expense"){
+          setStatus(message,true);
+        }
       }
 
     }finally{
@@ -3315,41 +3350,9 @@
       $("historyCountText").textContent = "";
     }
 
-    jsonp(
-      EXPENSE_API,
-      {
-        action:"getExpenses",
-        status:"PAID"
-      }
-    )
-      .then(function(data){
-        applyHistoryData(
-          Array.isArray(data) ? data : [],
-          false
-        );
-
-        saveSmartCache();
-      })
-      .catch(function(error){
-        if(historyLoaded){
-          renderExpenseHistory();
-          setDbStatus(
-            "Saved Device · Live Sync Unavailable",
-            "offline"
-          );
-          return;
-        }
-
-        $("historyRows").innerHTML =
-          '<tr><td colspan="13" class="history-empty">' +
-            esc(error && error.message ? error.message : "Could not load Expense History.") +
-          '</td></tr>';
-
-        $("historyRecordCount").textContent = "0";
-        $("historyTotalUsd").textContent = "$0.00";
-        $("historyOriginalUsd").textContent = "$0.00";
-        $("historyOriginalKhr").textContent = "0 ៛";
-      });
+    refreshAllExpenseData({
+      quiet:!forceLive
+    });
   }
 
   function setAccruedMessage(message,error){
@@ -3381,49 +3384,9 @@
       setAccruedMessage("",false);
     }
 
-    jsonp(
-      EXPENSE_API,
-      {
-        action:"getAccruedExpenses"
-      }
-    )
-      .then(function(data){
-        applyAccruedData(
-          Array.isArray(data) ? data : [],
-          false
-        );
-
-        saveSmartCache();
-      })
-      .catch(function(error){
-        if(accruedLoaded){
-          renderAccruedExpenses();
-
-          setDbStatus(
-            "Saved Device · Live Sync Unavailable",
-            "offline"
-          );
-
-          return;
-        }
-
-        $("accruedRows").innerHTML =
-          '<tr><td colspan="14" class="history-empty">' +
-            esc(error && error.message ? error.message : "Could not load Accrued Expenses.") +
-          '</td></tr>';
-
-        $("accruedCount").textContent = "0";
-        $("accruedOutstandingUsd").textContent = "$0.00";
-        $("accruedUnpaidCount").textContent = "0";
-        $("accruedOverdueCount").textContent = "0";
-
-        setAccruedMessage(
-          error && error.message
-            ? error.message
-            : "Could not load Accrued Expenses.",
-          true
-        );
-      });
+    refreshAllExpenseData({
+      quiet:!forceLive
+    });
   }
 
   function dayStart(value){
@@ -4840,10 +4803,9 @@
     setExpenseType("OPERATING EXPENSE");
     setPaymentStatus("PAID");
 
-    // V1.6 FAST START:
-    // 1) Device storage renders immediately.
-    // 2) Live data reconciles quietly.
-    // 3) Tiny revision endpoint checks every 30 seconds.
+    // V1.7 FAST START
+    // Device cache is painted first. One live snapshot request
+    // then reconciles all Expense views and Payee Master data.
     var hasCache = loadSmartCache();
 
     restoreAddDraft();
@@ -4862,7 +4824,9 @@
         quiet:true
       });
 
-    }else{
+    }else if(currentView === "add-expense"){
+      // Add Expense does not invoke a data loader through setPageView,
+      // so begin the single snapshot here.
       setDbStatus(
         "Connecting Expenses Database...",
         "syncing"
@@ -4871,6 +4835,13 @@
       refreshAllExpenseData({
         quiet:false
       });
+    }else{
+      // History / Accrued already started the same single snapshot
+      // from their view loader.
+      setDbStatus(
+        "Connecting Expenses Database...",
+        "syncing"
+      );
     }
 
     startSmartSync();
@@ -5046,9 +5017,12 @@
   });
 
   $("accruedRefreshBtn").addEventListener("click",function(){
-    setDbStatus("Refreshing Accrued Expenses...","syncing");
+    setDbStatus(
+      "Refreshing Accrued Expenses...",
+      "syncing"
+    );
+
     loadAccruedExpenses(true);
-    checkExpenseRevision();
   });
 
   $("expensePaymentCloseBtn").addEventListener("click",closeExpensePaymentModal);
@@ -5081,9 +5055,12 @@
   });
 
   $("historyRefreshBtn").addEventListener("click",function(){
-    setDbStatus("Refreshing Expense History...","syncing");
+    setDbStatus(
+      "Refreshing Expense History...",
+      "syncing"
+    );
+
     loadExpenseHistory(true);
-    checkExpenseRevision();
   });
 
   $("detailCloseBtn").addEventListener("click",closeExpenseDetail);
