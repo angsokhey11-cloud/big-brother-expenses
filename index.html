@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BIG BROTHER — Add Expense V1.1</title>
+  <title>BIG BROTHER — Expenses V1.2</title>
 
   <style>
     :root{
@@ -385,6 +385,274 @@
       display:none;
     }
 
+
+    /* =====================================================
+       V1.2 — EXPENSE HISTORY
+       ===================================================== */
+    .view-section[hidden]{
+      display:none !important;
+    }
+
+    .history-toolbar{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;
+      gap:8px;
+      align-items:end;
+      margin-bottom:10px;
+    }
+
+    .history-toolbar .field{
+      min-width:0;
+    }
+
+    .history-toolbar button{
+      min-height:44px;
+    }
+
+    .history-summary{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .history-kpi{
+      border:1px solid #dce5ef;
+      border-radius:11px;
+      background:#fff;
+      padding:10px;
+    }
+
+    .history-kpi small{
+      display:block;
+      color:#75879a;
+      font-size:9px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+
+    .history-kpi strong{
+      display:block;
+      margin-top:5px;
+      color:#173f77;
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .history-table-wrap{
+      overflow:auto;
+      border:1px solid #dce5ef;
+      border-radius:12px;
+      background:#fff;
+    }
+
+    .history-table{
+      width:100%;
+      min-width:1250px;
+      border-collapse:collapse;
+    }
+
+    .history-table th,
+    .history-table td{
+      padding:9px 8px;
+      border-bottom:1px solid #edf1f5;
+      text-align:left;
+      vertical-align:top;
+      font-size:10px;
+    }
+
+    .history-table th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#173f77;
+      color:#fff;
+      font-size:9px;
+      text-transform:uppercase;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+
+    .history-table tbody tr:hover{
+      background:#f7faff;
+    }
+
+    .history-id{
+      font-weight:1000;
+      color:#245fae;
+      white-space:nowrap;
+    }
+
+    .history-amount{
+      font-weight:1000;
+      color:#173f77;
+      white-space:nowrap;
+    }
+
+    .history-muted{
+      color:#6d7f93;
+    }
+
+    .status-badge{
+      display:inline-block;
+      border-radius:999px;
+      padding:4px 7px;
+      background:#edf8f2;
+      color:#18864b;
+      font-size:9px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .history-view-btn{
+      border:0;
+      border-radius:7px;
+      background:#eaf4ff;
+      color:#245fae;
+      min-height:32px;
+      padding:6px 9px;
+      font-size:9px;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .history-empty{
+      padding:28px 12px;
+      text-align:center;
+      color:#75879a;
+      font-size:12px;
+    }
+
+    .history-loading{
+      padding:22px 12px;
+      text-align:center;
+      color:#526b84;
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .history-count{
+      margin:8px 0 0;
+      color:#6d7f93;
+      font-size:10px;
+    }
+
+    .detail-overlay{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      display:grid;
+      place-items:center;
+      padding:14px;
+      background:rgba(11,25,44,.58);
+    }
+
+    .detail-overlay[hidden]{
+      display:none;
+    }
+
+    .detail-modal{
+      width:min(760px,100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:14px;
+      background:#fff;
+      box-shadow:0 20px 70px rgba(0,0,0,.25);
+    }
+
+    .detail-head{
+      position:sticky;
+      top:0;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:13px 14px;
+      border-bottom:1px solid #dce5ef;
+      background:#fff;
+    }
+
+    .detail-head h2{
+      margin:0;
+      color:#173f77;
+      font-size:17px;
+    }
+
+    .detail-close{
+      border:0;
+      border-radius:8px;
+      background:#e9eef5;
+      color:#36536f;
+      min-width:38px;
+      min-height:36px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .detail-body{
+      padding:14px;
+    }
+
+    .detail-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    .detail-cell{
+      border:1px solid #e0e8f1;
+      border-radius:9px;
+      background:#fbfcfe;
+      padding:9px;
+      min-width:0;
+    }
+
+    .detail-cell.full{
+      grid-column:1 / -1;
+    }
+
+    .detail-cell small{
+      display:block;
+      color:#75879a;
+      font-size:9px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .detail-cell strong{
+      display:block;
+      margin-top:4px;
+      color:#203a55;
+      font-size:11px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    @media(max-width:900px){
+      .history-toolbar{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .history-summary{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media(max-width:560px){
+      .history-toolbar,
+      .history-summary,
+      .detail-grid{
+        grid-template-columns:1fr;
+      }
+
+      .detail-cell.full{
+        grid-column:auto;
+      }
+    }
+
 </style>
 </head>
 
@@ -394,12 +662,14 @@
 
   <div class="topbar">
     <div class="brand">
-      <h1>💸 BIG BROTHER — Add Expense</h1>
-      <p>Record paid expenses. Unpaid expenses will be handled later in Accrued Expenses.</p>
+      <h1 id="pageTitle">💸 BIG BROTHER — Add Expense</h1>
+      <p id="pageSubtitle">Record paid expenses. Unpaid expenses will be handled later in Accrued Expenses.</p>
     </div>
 
     <div class="status-pill" id="dbStatus">Preparing Expenses Database...</div>
   </div>
+
+  <section class="view-section" id="viewAddExpense">
 
   <form id="expenseForm">
 
@@ -555,6 +825,123 @@
 
   </form>
 
+  </section>
+
+  <section class="view-section" id="viewExpenseHistory" hidden>
+
+    <div class="card">
+      <div class="card-title">📜 Expense History</div>
+
+      <div class="flow-note">
+        Shows every expense saved from <strong>Add Expense</strong>. Newest records are shown first.
+      </div>
+
+      <div class="history-toolbar">
+
+        <div class="field">
+          <label for="historySearch">Search</label>
+          <input id="historySearch" type="search" placeholder="Expense ID, payee, category, description...">
+        </div>
+
+        <div class="field">
+          <label for="historyType">Expense Type</label>
+          <select id="historyType">
+            <option value="">All Types</option>
+            <option value="OPERATING EXPENSE">Operating Expense</option>
+            <option value="NON-OPERATING EXPENSE">Non-Operating Expense</option>
+            <option value="CAPITAL EXPENSE">Capital Expense</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="historyCurrency">Currency</label>
+          <select id="historyCurrency">
+            <option value="">All Currency</option>
+            <option value="USD">USD</option>
+            <option value="KHR">KHR</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="historyFrom">From Date</label>
+          <input id="historyFrom" type="date">
+        </div>
+
+        <div class="field">
+          <label for="historyTo">To Date</label>
+          <input id="historyTo" type="date">
+        </div>
+
+        <button class="btn secondary" type="button" id="historyRefreshBtn">↻ Refresh</button>
+
+      </div>
+
+      <div class="history-summary">
+        <div class="history-kpi">
+          <small>Expense Records</small>
+          <strong id="historyRecordCount">0</strong>
+        </div>
+
+        <div class="history-kpi">
+          <small>Total Amount USD</small>
+          <strong id="historyTotalUsd">$0.00</strong>
+        </div>
+
+        <div class="history-kpi">
+          <small>Original USD Expenses</small>
+          <strong id="historyOriginalUsd">$0.00</strong>
+        </div>
+
+        <div class="history-kpi">
+          <small>Original KHR Expenses</small>
+          <strong id="historyOriginalKhr">0 ៛</strong>
+        </div>
+      </div>
+
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Expense ID</th>
+              <th>Date</th>
+              <th>Expense Type</th>
+              <th>Category</th>
+              <th>Payee</th>
+              <th>Description</th>
+              <th>Currency</th>
+              <th>Amount</th>
+              <th>Amount USD</th>
+              <th>Payment Method</th>
+              <th>Reference No.</th>
+              <th>Status</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="historyRows">
+            <tr>
+              <td colspan="13" class="history-loading">Loading Expense History...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="history-count" id="historyCountText"></div>
+    </div>
+
+  </section>
+
+</div>
+
+<div class="detail-overlay" id="expenseDetailOverlay" hidden>
+  <div class="detail-modal">
+    <div class="detail-head">
+      <h2 id="detailTitle">Expense Detail</h2>
+      <button class="detail-close" type="button" id="detailCloseBtn">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -585,6 +972,14 @@
   };
 
   var bootstrap = null;
+  var allExpenses = [];
+  var historyLoaded = false;
+
+  var requestedView = clean(params.get("view")).toLowerCase();
+  var currentView =
+    requestedView === "expense-history" || requestedView === "history"
+      ? "expense-history"
+      : "add-expense";
 
   function jsonp(url,query,timeout){
     query = query || {};
@@ -722,6 +1117,282 @@
     }finally{
       clearTimeout(timer);
     }
+  }
+
+  function esc(value){
+    return clean(value)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
+
+  function formatDateDDMMYYYY(value){
+    var raw = clean(value);
+    if(!raw) return "-";
+
+    var match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+    if(match){
+      return match[3] + "/" + match[2] + "/" + match[1];
+    }
+
+    var d = new Date(raw);
+    if(Number.isNaN(d.getTime())) return raw;
+
+    return String(d.getDate()).padStart(2,"0") + "/" +
+      String(d.getMonth()+1).padStart(2,"0") + "/" +
+      d.getFullYear();
+  }
+
+  function formatDateTime(value){
+    var raw = clean(value);
+    if(!raw) return "-";
+
+    var d = new Date(raw);
+    if(Number.isNaN(d.getTime())) return raw;
+
+    return d.toLocaleString();
+  }
+
+  function setPageView(view){
+    currentView = view === "expense-history"
+      ? "expense-history"
+      : "add-expense";
+
+    $("viewAddExpense").hidden = currentView !== "add-expense";
+    $("viewExpenseHistory").hidden = currentView !== "expense-history";
+
+    if(currentView === "expense-history"){
+      $("pageTitle").textContent = "📜 BIG BROTHER — Expense History";
+      $("pageSubtitle").textContent = "All paid expense records saved from Add Expense.";
+      document.title = "BIG BROTHER — Expense History";
+
+      if(!historyLoaded){
+        loadExpenseHistory();
+      }else{
+        renderExpenseHistory();
+      }
+    }else{
+      $("pageTitle").textContent = "💸 BIG BROTHER — Add Expense";
+      $("pageSubtitle").textContent = "Record paid expenses. Unpaid expenses will be handled later in Accrued Expenses.";
+      document.title = "BIG BROTHER — Add Expense";
+    }
+  }
+
+  function loadExpenseHistory(){
+    $("historyRows").innerHTML =
+      '<tr><td colspan="13" class="history-loading">Loading Expense History...</td></tr>';
+
+    $("historyCountText").textContent = "";
+
+    jsonp(
+      EXPENSE_API,
+      {
+        action:"getExpenses"
+      }
+    )
+      .then(function(data){
+        allExpenses = Array.isArray(data) ? data : [];
+        historyLoaded = true;
+        renderExpenseHistory();
+      })
+      .catch(function(error){
+        $("historyRows").innerHTML =
+          '<tr><td colspan="13" class="history-empty">' +
+            esc(error && error.message ? error.message : "Could not load Expense History.") +
+          '</td></tr>';
+
+        $("historyRecordCount").textContent = "0";
+        $("historyTotalUsd").textContent = "$0.00";
+        $("historyOriginalUsd").textContent = "$0.00";
+        $("historyOriginalKhr").textContent = "0 ៛";
+      });
+  }
+
+  function historyFilteredExpenses(){
+    var query = clean($("historySearch").value).toLowerCase();
+    var type = clean($("historyType").value);
+    var currencyFilter = clean($("historyCurrency").value);
+    var from = clean($("historyFrom").value);
+    var to = clean($("historyTo").value);
+
+    return allExpenses.filter(function(expense){
+      if(
+        type &&
+        clean(expense.expenseType) !== type
+      ){
+        return false;
+      }
+
+      if(
+        currencyFilter &&
+        clean(expense.currency) !== currencyFilter
+      ){
+        return false;
+      }
+
+      var date = clean(expense.expenseDate).slice(0,10);
+
+      if(from && date && date < from) return false;
+      if(to && date && date > to) return false;
+
+      if(query){
+        var haystack = [
+          expense.expenseId,
+          expense.expenseDate,
+          expense.expenseType,
+          expense.category,
+          expense.payee,
+          expense.description,
+          expense.currency,
+          expense.amount,
+          expense.amountUSD,
+          expense.paymentMethod,
+          expense.referenceNo,
+          expense.status,
+          expense.note
+        ]
+          .map(clean)
+          .join(" ")
+          .toLowerCase();
+
+        if(haystack.indexOf(query) === -1){
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  function renderExpenseHistory(){
+    var rows = historyFilteredExpenses();
+
+    var totalUsd = 0;
+    var originalUsd = 0;
+    var originalKhr = 0;
+
+    rows.forEach(function(expense){
+      totalUsd += num(expense.amountUSD);
+
+      if(clean(expense.currency) === "KHR"){
+        originalKhr += num(expense.amount);
+      }else{
+        originalUsd += num(expense.amount);
+      }
+    });
+
+    $("historyRecordCount").textContent =
+      rows.length.toLocaleString("en-US");
+
+    $("historyTotalUsd").textContent =
+      formatMoney(totalUsd,"USD");
+
+    $("historyOriginalUsd").textContent =
+      formatMoney(originalUsd,"USD");
+
+    $("historyOriginalKhr").textContent =
+      formatMoney(originalKhr,"KHR");
+
+    $("historyCountText").textContent =
+      "Showing " +
+      rows.length.toLocaleString("en-US") +
+      " of " +
+      allExpenses.length.toLocaleString("en-US") +
+      " expense record" +
+      (allExpenses.length === 1 ? "" : "s") +
+      ".";
+
+    if(!rows.length){
+      $("historyRows").innerHTML =
+        '<tr><td colspan="13" class="history-empty">No expense records match the current filters.</td></tr>';
+      return;
+    }
+
+    $("historyRows").innerHTML = rows.map(function(expense){
+      var cur = clean(expense.currency) === "KHR" ? "KHR" : "USD";
+
+      return [
+        "<tr>",
+          '<td class="history-id">',esc(expense.expenseId),"</td>",
+          "<td>",esc(formatDateDDMMYYYY(expense.expenseDate)),"</td>",
+          "<td>",esc(displayType(expense.expenseType)),"</td>",
+          "<td>",esc(expense.category),"</td>",
+          "<td>",esc(expense.payee),"</td>",
+          "<td>",esc(expense.description),"</td>",
+          "<td>",esc(cur),"</td>",
+          '<td class="history-amount">',esc(formatMoney(expense.amount,cur)),"</td>",
+          '<td class="history-amount">',esc(formatMoney(expense.amountUSD,"USD")),"</td>",
+          "<td>",esc(expense.paymentMethod || "-"),"</td>",
+          '<td class="history-muted">',esc(expense.referenceNo || "-"),"</td>",
+          '<td><span class="status-badge">',esc(expense.status || "PAID"),"</span></td>",
+          '<td><button type="button" class="history-view-btn" data-expense-id="',esc(expense.expenseId),'">View</button></td>',
+        "</tr>"
+      ].join("");
+    }).join("");
+
+    $("historyRows")
+      .querySelectorAll("[data-expense-id]")
+      .forEach(function(button){
+        button.addEventListener("click",function(){
+          showExpenseDetail(button.dataset.expenseId);
+        });
+      });
+  }
+
+  function showExpenseDetail(expenseId){
+    var expense = allExpenses.find(function(item){
+      return clean(item.expenseId) === clean(expenseId);
+    });
+
+    if(!expense) return;
+
+    var fields = [
+      ["Expense ID", expense.expenseId],
+      ["Expense Date", formatDateDDMMYYYY(expense.expenseDate)],
+      ["Expense Type", displayType(expense.expenseType)],
+      ["Category", expense.category],
+      ["Payee / Paid To", expense.payee],
+      ["Description", expense.description],
+      ["Currency", expense.currency],
+      ["Exchange Rate", num(expense.exchangeRate) > 0 ? num(expense.exchangeRate).toLocaleString("en-US") : "-"],
+      ["Original Amount", formatMoney(expense.amount,expense.currency || "USD")],
+      ["Amount USD", formatMoney(expense.amountUSD,"USD")],
+      ["Payment Method", expense.paymentMethod || "-"],
+      ["Reference / Receipt No.", expense.referenceNo || "-"],
+      ["Due Date", expense.dueDate ? formatDateDDMMYYYY(expense.dueDate) : "-"],
+      ["Status", expense.status || "PAID"],
+      ["Paid Amount", formatMoney(expense.paidAmount,expense.currency || "USD")],
+      ["Balance", formatMoney(expense.balance,expense.currency || "USD")],
+      ["Note", expense.note || "-"],
+      ["Created At", formatDateTime(expense.createdAt)],
+      ["Updated At", formatDateTime(expense.updatedAt)]
+    ];
+
+    $("detailTitle").textContent =
+      "Expense Detail — " + clean(expense.expenseId);
+
+    $("detailGrid").innerHTML = fields.map(function(field,index){
+      var full = [
+        "Description",
+        "Note"
+      ].indexOf(field[0]) >= 0;
+
+      return [
+        '<div class="detail-cell',full ? " full" : "",'">',
+          "<small>",esc(field[0]),"</small>",
+          "<strong>",esc(field[1]),"</strong>",
+        "</div>"
+      ].join("");
+    }).join("");
+
+    $("expenseDetailOverlay").hidden = false;
+  }
+
+  function closeExpenseDetail(){
+    $("expenseDetailOverlay").hidden = true;
   }
 
   function todayValue(){
@@ -969,6 +1640,7 @@
         }
 
         setStatus("Expense saved successfully.",false);
+        historyLoaded = false;
         showSuccess(result);
       })
       .catch(function(error){
@@ -1013,6 +1685,7 @@
 
         $("dbStatus").textContent = "Expenses Database Ready";
         setStatus("Ready to add expense.",false);
+        setPageView(currentView);
       })
       .catch(function(error){
         $("dbStatus").textContent = "Database Error";
@@ -1022,6 +1695,7 @@
             : "Could not prepare Expenses Database.",
           true
         );
+        setPageView(currentView);
       });
   }
 
@@ -1056,6 +1730,44 @@
   });
 
   $("expenseForm").addEventListener("submit",handleSave);
+
+  [
+    "historySearch",
+    "historyType",
+    "historyCurrency",
+    "historyFrom",
+    "historyTo"
+  ].forEach(function(id){
+    var element = $(id);
+
+    element.addEventListener(
+      id === "historySearch" ? "input" : "change",
+      function(){
+        if(historyLoaded){
+          renderExpenseHistory();
+        }
+      }
+    );
+  });
+
+  $("historyRefreshBtn").addEventListener("click",function(){
+    historyLoaded = false;
+    loadExpenseHistory();
+  });
+
+  $("detailCloseBtn").addEventListener("click",closeExpenseDetail);
+
+  $("expenseDetailOverlay").addEventListener("click",function(event){
+    if(event.target === $("expenseDetailOverlay")){
+      closeExpenseDetail();
+    }
+  });
+
+  document.addEventListener("keydown",function(event){
+    if(event.key === "Escape"){
+      closeExpenseDetail();
+    }
+  });
 
   initialize();
 
