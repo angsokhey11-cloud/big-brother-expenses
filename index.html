@@ -1,1 +1,901 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BIG BROTHER — Add Expense</title>
 
+  <style>
+    :root{
+      --navy:#173f77;
+      --blue:#245fae;
+      --bg:#eef3f8;
+      --line:#dce5ef;
+      --text:#172b43;
+      --muted:#6d7f93;
+      --green:#18864b;
+      --red:#c0392b;
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    button,input,select,textarea{font:inherit}
+
+    .app{
+      width:min(920px,100%);
+      margin:0 auto;
+      padding:14px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .brand h1{
+      margin:0;
+      color:var(--navy);
+      font-size:24px;
+    }
+
+    .brand p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .status-pill{
+      flex:0 0 auto;
+      border:1px solid #cad8e7;
+      border-radius:999px;
+      padding:7px 10px;
+      background:#fff;
+      color:#526b84;
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      padding:14px;
+      margin-bottom:11px;
+    }
+
+    .card-title{
+      margin:0 0 11px;
+      color:var(--navy);
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .flow-note{
+      border:1px solid #c9ddf5;
+      border-radius:10px;
+      background:#f6faff;
+      color:#315d8f;
+      padding:9px 10px;
+      margin-bottom:11px;
+      font-size:11px;
+      line-height:1.45;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .field{min-width:0}
+    .field.full{grid-column:1 / -1}
+
+    label{
+      display:block;
+      margin-bottom:6px;
+      color:#526b84;
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.25px;
+    }
+
+    input,select,textarea{
+      width:100%;
+      border:1px solid #cbd8e7;
+      border-radius:9px;
+      background:#fff;
+      color:var(--text);
+      padding:9px 10px;
+      outline:none;
+    }
+
+    input,select{min-height:44px}
+    textarea{min-height:80px;resize:vertical}
+
+    input:focus,select:focus,textarea:focus{
+      border-color:#5f95dd;
+      box-shadow:0 0 0 2px rgba(36,95,174,.11);
+    }
+
+    .type-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:7px;
+    }
+
+    .type-btn{
+      min-height:48px;
+      border:1px solid #cbd8e7;
+      border-radius:10px;
+      background:#f7f9fc;
+      color:#4b6178;
+      padding:8px 9px;
+      font-size:11px;
+      font-weight:900;
+      line-height:1.25;
+      cursor:pointer;
+    }
+
+    .type-btn.active{
+      border-color:#245fae;
+      background:#245fae;
+      color:#fff;
+    }
+
+    .hidden-select{
+      position:absolute!important;
+      width:1px!important;
+      height:1px!important;
+      overflow:hidden!important;
+      clip:rect(0 0 0 0)!important;
+      white-space:nowrap!important;
+      border:0!important;
+      padding:0!important;
+      margin:-1px!important;
+    }
+
+    .money-card{
+      border:1px solid #bfd3ef;
+      border-radius:12px;
+      background:linear-gradient(135deg,#f8fbff,#edf5ff);
+      padding:11px;
+    }
+
+    .currency-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:6px;
+      margin-bottom:9px;
+    }
+
+    .currency-btn{
+      min-height:40px;
+      border:0;
+      border-radius:8px;
+      background:#e8eff8;
+      color:#526b84;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .currency-btn.active{
+      background:#245fae;
+      color:#fff;
+    }
+
+    .amount-wrap{
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr);
+      gap:8px;
+      align-items:center;
+    }
+
+    .amount-symbol{
+      color:#173f77;
+      font-size:24px;
+      font-weight:1000;
+    }
+
+    #amount{
+      min-height:56px;
+      font-size:26px;
+      font-weight:1000;
+      text-align:right;
+      color:#173f77;
+    }
+
+    .rate-card{
+      border:1px solid #d5e2f1;
+      border-radius:10px;
+      background:#fff;
+      padding:9px 10px;
+      margin-top:9px;
+    }
+
+    .rate-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:7px;
+      color:#526b84;
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .rate-row{
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr);
+      gap:8px;
+      align-items:center;
+    }
+
+    .rate-row strong{
+      color:#173f77;
+      font-size:13px;
+    }
+
+    #exchangeRate{
+      text-align:right;
+      font-size:16px;
+      font-weight:900;
+      color:#173f77;
+    }
+
+    .converted{
+      margin-top:7px;
+      color:#607890;
+      font-size:11px;
+      text-align:right;
+    }
+
+    .other-category{margin-top:9px}
+    .other-category[hidden]{display:none}
+
+    .actions{
+      display:grid;
+      grid-template-columns:1fr 1.5fr;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .btn{
+      min-height:46px;
+      border:0;
+      border-radius:9px;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .btn.secondary{
+      background:#e9eef5;
+      color:#36536f;
+    }
+
+    .btn.primary{
+      background:#18864b;
+      color:#fff;
+    }
+
+    .btn:disabled{
+      opacity:.6;
+      cursor:wait;
+    }
+
+    .status{
+      min-height:18px;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.4;
+    }
+
+    .status.error{color:var(--red)}
+
+    .success-card{
+      border:1px solid #bfe0cc;
+      border-radius:14px;
+      background:#edf8f2;
+      padding:14px;
+      margin-top:11px;
+    }
+
+    .success-card[hidden]{display:none}
+
+    .success-title{
+      color:#12663b;
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .success-id{
+      margin-top:4px;
+      color:#4b6a59;
+      font-size:11px;
+      font-weight:900;
+    }
+
+    .success-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .success-meta{
+      border:1px solid #cfe6d7;
+      border-radius:9px;
+      background:#fff;
+      padding:9px;
+    }
+
+    .success-meta small{
+      display:block;
+      color:#6a8475;
+      font-size:9px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .success-meta strong{
+      display:block;
+      margin-top:3px;
+      color:#1f4e36;
+      font-size:12px;
+      word-break:break-word;
+    }
+
+    @media(max-width:720px){
+      .app{padding:10px}
+      .topbar{display:grid;grid-template-columns:1fr}
+      .status-pill{justify-self:start}
+      .grid-2{grid-template-columns:1fr}
+      .type-grid{grid-template-columns:1fr}
+      .actions{grid-template-columns:1fr}
+      .success-grid{grid-template-columns:1fr}
+      input,select,textarea{font-size:16px}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <h1>💸 BIG BROTHER — Add Expense</h1>
+      <p>Record paid expenses. Unpaid expenses will be handled later in Accrued Expenses.</p>
+    </div>
+
+    <div class="status-pill" id="dbStatus">Preparing Expenses Database...</div>
+  </div>
+
+  <form id="expenseForm">
+
+    <div class="card">
+      <div class="card-title">Expense Information</div>
+
+      <div class="flow-note">
+        Add Expense is for expenses already paid now. Every saved record is stored as <strong>PAID</strong>.
+      </div>
+
+      <div class="grid-2">
+
+        <div class="field">
+          <label for="expenseDate">Expense Date</label>
+          <input id="expenseDate" type="date" required>
+        </div>
+
+        <div class="field">
+          <label>Expense Type</label>
+
+          <div class="type-grid">
+            <button class="type-btn active" type="button" data-type="OPERATING EXPENSE">Operating Expense</button>
+            <button class="type-btn" type="button" data-type="NON-OPERATING EXPENSE">Non-Operating Expense</button>
+            <button class="type-btn" type="button" data-type="CAPITAL EXPENSE">Capital Expense</button>
+          </div>
+
+          <select id="expenseType" class="hidden-select" tabindex="-1" aria-hidden="true">
+            <option value="OPERATING EXPENSE">Operating Expense</option>
+            <option value="NON-OPERATING EXPENSE">Non-Operating Expense</option>
+            <option value="CAPITAL EXPENSE">Capital Expense</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="category">Expense Category</label>
+          <select id="category" required>
+            <option value="">Loading Categories...</option>
+          </select>
+
+          <div class="other-category" id="otherCategoryWrap" hidden>
+            <label for="otherCategory">Custom Category</label>
+            <input id="otherCategory" type="text" autocomplete="off" placeholder="Enter expense category">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="payee">Payee / Paid To</label>
+          <input id="payee" type="text" autocomplete="off" placeholder="Who received the money?" required>
+        </div>
+
+        <div class="field full">
+          <label for="description">Description</label>
+          <input id="description" type="text" autocomplete="off" placeholder="What was this expense for?" required>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Amount & Payment</div>
+
+      <div class="grid-2">
+
+        <div class="money-card">
+          <label>Currency & Amount</label>
+
+          <div class="currency-row">
+            <button class="currency-btn active" type="button" id="currencyUSD">USD</button>
+            <button class="currency-btn" type="button" id="currencyKHR">KHR</button>
+          </div>
+
+          <select id="currency" class="hidden-select" tabindex="-1" aria-hidden="true">
+            <option value="USD">USD</option>
+            <option value="KHR">KHR</option>
+          </select>
+
+          <div class="amount-wrap">
+            <span class="amount-symbol" id="amountSymbol">$</span>
+            <input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+          </div>
+
+          <div class="rate-card">
+            <div class="rate-head">
+              <span>Exchange Rate</span>
+              <span>Fixed on this device until changed</span>
+            </div>
+
+            <div class="rate-row">
+              <strong>1 USD = KHR</strong>
+              <input id="exchangeRate" type="number" min="1" step="1" inputmode="decimal" value="4100">
+            </div>
+
+            <div class="converted" id="convertedAmount">Amount USD: $0.00</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="field">
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" required>
+              <option value="">Select Payment Method</option>
+            </select>
+          </div>
+
+          <div class="field" style="margin-top:10px">
+            <label for="referenceNo">Reference / Receipt No. (Optional)</label>
+            <input id="referenceNo" type="text" autocomplete="off" placeholder="Receipt, transfer or reference number">
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="note">Note (Optional)</label>
+          <textarea id="note" placeholder="Additional expense note"></textarea>
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="btn secondary" type="button" id="clearBtn">Clear</button>
+        <button class="btn primary" type="submit" id="saveBtn">💾 Save Expense</button>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="success-card" id="successCard" hidden>
+        <div class="success-title">✅ Expense Saved</div>
+        <div class="success-id" id="successId"></div>
+
+        <div class="success-grid">
+          <div class="success-meta">
+            <small>Expense Type</small>
+            <strong id="successType"></strong>
+          </div>
+
+          <div class="success-meta">
+            <small>Category</small>
+            <strong id="successCategory"></strong>
+          </div>
+
+          <div class="success-meta">
+            <small>Amount</small>
+            <strong id="successAmount"></strong>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn secondary" type="button" id="addAnotherBtn">➕ Add Another Expense</button>
+          <button class="btn primary" type="button" id="focusAmountBtn">Key In Amount</button>
+        </div>
+      </div>
+
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var RATE_KEY = "bb_expense_exchange_rate_v1";
+
+  var $ = function(id){
+    return document.getElementById(id);
+  };
+
+  var clean = function(value){
+    return String(value == null ? "" : value).trim();
+  };
+
+  var num = function(value){
+    var n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  var bootstrap = null;
+
+  function todayValue(){
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,"0");
+    var day = String(d.getDate()).padStart(2,"0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function displayType(value){
+    if(value === "NON-OPERATING EXPENSE") return "Non-Operating Expense";
+    if(value === "CAPITAL EXPENSE") return "Capital Expense";
+    return "Operating Expense";
+  }
+
+  function formatMoney(value,currency){
+    value = num(value);
+
+    if(currency === "KHR"){
+      return Math.round(value).toLocaleString("en-US") + " ៛";
+    }
+
+    return "$" + value.toLocaleString(
+      "en-US",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
+  }
+
+  function currency(){
+    return $("currency").value === "KHR" ? "KHR" : "USD";
+  }
+
+  function rate(){
+    return Math.max(1,num($("exchangeRate").value) || 4100);
+  }
+
+  function amountUSD(){
+    var amount = Math.max(0,num($("amount").value));
+    return currency() === "KHR" ? amount / rate() : amount;
+  }
+
+  function setStatus(message,error){
+    $("status").textContent = clean(message);
+    $("status").classList.toggle("error",!!error);
+  }
+
+  function loadRatePreference(){
+    try{
+      var saved = num(localStorage.getItem(RATE_KEY));
+      if(saved > 0){
+        $("exchangeRate").value = String(saved);
+      }
+    }catch(_){}
+  }
+
+  function persistRate(){
+    var r = rate();
+    $("exchangeRate").value = String(r);
+
+    try{
+      localStorage.setItem(RATE_KEY,String(r));
+    }catch(_){}
+
+    updateConverted();
+  }
+
+  function setCurrency(next){
+    next = next === "KHR" ? "KHR" : "USD";
+    $("currency").value = next;
+
+    $("currencyUSD").classList.toggle("active",next === "USD");
+    $("currencyKHR").classList.toggle("active",next === "KHR");
+
+    $("amountSymbol").textContent = next === "KHR" ? "៛" : "$";
+    $("amount").step = next === "KHR" ? "1" : "0.01";
+
+    updateConverted();
+  }
+
+  function updateConverted(){
+    $("convertedAmount").textContent = "Amount USD: " + formatMoney(amountUSD(),"USD");
+  }
+
+  function setExpenseType(value){
+    $("expenseType").value = value;
+
+    document.querySelectorAll(".type-btn").forEach(function(button){
+      button.classList.toggle(
+        "active",
+        button.dataset.type === value
+      );
+    });
+  }
+
+  function fillCategories(categories){
+    var select = $("category");
+    select.innerHTML = '<option value="">Select Expense Category</option>';
+
+    (categories || []).forEach(function(category){
+      var option = document.createElement("option");
+      option.value = category.category;
+      option.textContent = category.category;
+      select.appendChild(option);
+    });
+  }
+
+  function fillPaymentMethods(methods){
+    var select = $("paymentMethod");
+    select.innerHTML = '<option value="">Select Payment Method</option>';
+
+    (methods || []).forEach(function(method){
+      var option = document.createElement("option");
+      option.value = method;
+      option.textContent = method;
+      select.appendChild(option);
+    });
+  }
+
+  function handleCategoryChange(){
+    var isOther = $("category").value === "Other";
+    $("otherCategoryWrap").hidden = !isOther;
+
+    if(isOther){
+      setTimeout(function(){
+        $("otherCategory").focus();
+      },20);
+    }else{
+      $("otherCategory").value = "";
+    }
+  }
+
+  function getCategoryValue(){
+    if($("category").value === "Other"){
+      return clean($("otherCategory").value);
+    }
+
+    return clean($("category").value);
+  }
+
+  function collectPayload(){
+    return {
+      expenseDate:clean($("expenseDate").value),
+      expenseType:clean($("expenseType").value),
+      category:getCategoryValue(),
+      payee:clean($("payee").value),
+      description:clean($("description").value),
+      currency:currency(),
+      exchangeRate:rate(),
+      amount:num($("amount").value),
+      paymentMethod:clean($("paymentMethod").value),
+      referenceNo:clean($("referenceNo").value),
+      note:clean($("note").value)
+    };
+  }
+
+  function validatePayload(data){
+    if(!data.expenseDate) return "Expense Date is required.";
+    if(!data.expenseType) return "Expense Type is required.";
+    if(!data.category) return "Expense Category is required.";
+    if(!data.payee) return "Payee / Paid To is required.";
+    if(!data.description) return "Description is required.";
+    if(!(data.amount > 0)) return "Amount must be greater than zero.";
+    if(data.currency === "KHR" && !(data.exchangeRate > 0)) return "Exchange Rate is required for KHR.";
+    if(!data.paymentMethod) return "Payment Method is required.";
+    return "";
+  }
+
+  function clearForm(){
+    $("expenseForm").reset();
+
+    setExpenseType("OPERATING EXPENSE");
+    setCurrency("USD");
+    $("expenseDate").value = todayValue();
+
+    if(bootstrap){
+      fillCategories(bootstrap.categories);
+      fillPaymentMethods(bootstrap.paymentMethods);
+    }
+
+    $("otherCategoryWrap").hidden = true;
+    $("otherCategory").value = "";
+
+    loadRatePreference();
+    updateConverted();
+
+    $("successCard").hidden = true;
+    setStatus("",false);
+
+    setTimeout(function(){
+      $("category").focus();
+    },30);
+  }
+
+  function showSuccess(result){
+    var expense = result && result.expense ? result.expense : {};
+
+    $("successId").textContent = expense.expenseId || "";
+    $("successType").textContent = displayType(expense.expenseType);
+    $("successCategory").textContent = expense.category || "-";
+    $("successAmount").textContent = formatMoney(expense.amount,expense.currency || "USD");
+    $("successCard").hidden = false;
+
+    $("successCard").scrollIntoView({
+      behavior:"smooth",
+      block:"nearest"
+    });
+  }
+
+  function handleSave(event){
+    event.preventDefault();
+
+    var payload = collectPayload();
+    var error = validatePayload(payload);
+
+    if(error){
+      setStatus(error,true);
+      return;
+    }
+
+    var button = $("saveBtn");
+    var oldText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+    setStatus("Saving expense...",false);
+    $("successCard").hidden = true;
+
+    google.script.run
+      .withSuccessHandler(function(result){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        if(!result || !result.success){
+          setStatus(
+            result && result.error
+              ? result.error
+              : "Could not save expense.",
+            true
+          );
+          return;
+        }
+
+        setStatus("Expense saved successfully.",false);
+        showSuccess(result);
+      })
+      .withFailureHandler(function(error){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        setStatus(
+          error && error.message
+            ? error.message
+            : "Could not save expense.",
+          true
+        );
+      })
+      .createExpense(payload);
+  }
+
+  function initialize(){
+    $("expenseDate").value = todayValue();
+    loadRatePreference();
+    setCurrency("USD");
+    setExpenseType("OPERATING EXPENSE");
+
+    google.script.run
+      .withSuccessHandler(function(data){
+        bootstrap = data || {};
+
+        fillCategories(
+          Array.isArray(bootstrap.categories)
+            ? bootstrap.categories
+            : []
+        );
+
+        fillPaymentMethods(
+          Array.isArray(bootstrap.paymentMethods)
+            ? bootstrap.paymentMethods
+            : []
+        );
+
+        $("dbStatus").textContent = "Expenses Database Ready";
+        setStatus("Ready to add expense.",false);
+      })
+      .withFailureHandler(function(error){
+        $("dbStatus").textContent = "Database Error";
+        setStatus(
+          error && error.message
+            ? error.message
+            : "Could not prepare Expenses Database.",
+          true
+        );
+      })
+      .getExpenseBootstrap();
+  }
+
+  document.querySelectorAll(".type-btn").forEach(function(button){
+    button.addEventListener("click",function(){
+      setExpenseType(button.dataset.type);
+    });
+  });
+
+  $("currencyUSD").addEventListener("click",function(){
+    setCurrency("USD");
+  });
+
+  $("currencyKHR").addEventListener("click",function(){
+    setCurrency("KHR");
+  });
+
+  $("amount").addEventListener("input",updateConverted);
+  $("exchangeRate").addEventListener("input",updateConverted);
+  $("exchangeRate").addEventListener("change",persistRate);
+  $("exchangeRate").addEventListener("blur",persistRate);
+
+  $("category").addEventListener("change",handleCategoryChange);
+
+  $("clearBtn").addEventListener("click",clearForm);
+  $("addAnotherBtn").addEventListener("click",clearForm);
+
+  $("focusAmountBtn").addEventListener("click",function(){
+    $("successCard").hidden = true;
+    $("amount").focus();
+    $("amount").select();
+  });
+
+  $("expenseForm").addEventListener("submit",handleSave);
+
+  initialize();
+
+})();
+</script>
+
+</body>
+</html>
