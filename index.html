@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BIG BROTHER — Expenses V1.2</title>
+  <title>BIG BROTHER — Expenses V1.4</title>
 
   <style>
     :root{
@@ -653,6 +653,275 @@
       }
     }
 
+
+    /* =====================================================
+       V1.4 — PAID / UNPAID + ACCRUED EXPENSES
+       ===================================================== */
+    .payment-status-box{
+      border:1px solid #cbd8e7;
+      border-radius:11px;
+      background:#f8fbff;
+      padding:10px;
+      margin-bottom:10px;
+    }
+
+    .payment-status-options{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+    }
+
+    .payment-status-btn{
+      min-height:44px;
+      border:1px solid #cbd8e7;
+      border-radius:9px;
+      background:#fff;
+      color:#526b84;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .payment-status-btn.active{
+      border-color:#245fae;
+      background:#245fae;
+      color:#fff;
+    }
+
+    .payment-status-help{
+      margin-top:7px;
+      color:#6d7f93;
+      font-size:10px;
+      line-height:1.45;
+    }
+
+    .unpaid-note{
+      color:#a15b00;
+    }
+
+    .conditional-payment-field[hidden]{
+      display:none !important;
+    }
+
+    .accrued-summary{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .accrued-kpi{
+      border:1px solid #dce5ef;
+      border-radius:11px;
+      background:#fff;
+      padding:10px;
+    }
+
+    .accrued-kpi small{
+      display:block;
+      color:#75879a;
+      font-size:9px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+
+    .accrued-kpi strong{
+      display:block;
+      margin-top:5px;
+      color:#173f77;
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .accrued-toolbar{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr auto;
+      gap:8px;
+      align-items:end;
+      margin-bottom:10px;
+    }
+
+    .accrued-table-wrap{
+      overflow:auto;
+      border:1px solid #dce5ef;
+      border-radius:12px;
+      background:#fff;
+    }
+
+    .accrued-table{
+      width:100%;
+      min-width:1380px;
+      border-collapse:collapse;
+    }
+
+    .accrued-table th,
+    .accrued-table td{
+      padding:9px 8px;
+      border-bottom:1px solid #edf1f5;
+      text-align:left;
+      vertical-align:top;
+      font-size:10px;
+    }
+
+    .accrued-table th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#173f77;
+      color:#fff;
+      font-size:9px;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .accrued-table tbody tr:hover{
+      background:#f8fbff;
+    }
+
+    .accrued-overdue{
+      color:#c0392b;
+      font-weight:1000;
+    }
+
+    .accrued-due-today{
+      color:#a96800;
+      font-weight:1000;
+    }
+
+    .badge-unpaid,
+    .badge-partial,
+    .badge-paid{
+      display:inline-block;
+      border-radius:999px;
+      padding:4px 7px;
+      font-size:9px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .badge-unpaid{
+      background:#fff0ef;
+      color:#c0392b;
+    }
+
+    .badge-partial{
+      background:#fff6df;
+      color:#9a6500;
+    }
+
+    .badge-paid{
+      background:#edf8f2;
+      color:#18864b;
+    }
+
+    .record-payment-btn{
+      border:0;
+      border-radius:7px;
+      background:#18864b;
+      color:#fff;
+      min-height:32px;
+      padding:6px 9px;
+      font-size:9px;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .payment-overlay{
+      position:fixed;
+      inset:0;
+      z-index:10000;
+      display:grid;
+      place-items:center;
+      padding:14px;
+      background:rgba(11,25,44,.62);
+    }
+
+    .payment-overlay[hidden]{
+      display:none;
+    }
+
+    .payment-modal{
+      width:min(620px,100%);
+      max-height:92vh;
+      overflow:auto;
+      border-radius:14px;
+      background:#fff;
+      box-shadow:0 20px 70px rgba(0,0,0,.28);
+    }
+
+    .payment-modal-head{
+      position:sticky;
+      top:0;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:13px 14px;
+      border-bottom:1px solid #dce5ef;
+      background:#fff;
+    }
+
+    .payment-modal-head h2{
+      margin:0;
+      color:#173f77;
+      font-size:17px;
+    }
+
+    .payment-modal-body{
+      padding:14px;
+    }
+
+    .payment-summary-box{
+      border:1px solid #cfe0f3;
+      border-radius:10px;
+      background:#f7fbff;
+      padding:10px;
+      margin-bottom:10px;
+    }
+
+    .payment-summary-line{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:4px 0;
+      font-size:11px;
+    }
+
+    .payment-summary-line strong{
+      color:#173f77;
+    }
+
+    .accrued-status-message{
+      min-height:18px;
+      margin:8px 0;
+      color:#6d7f93;
+      font-size:11px;
+    }
+
+    .accrued-status-message.error{
+      color:#c0392b;
+    }
+
+    @media(max-width:900px){
+      .accrued-summary{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .accrued-toolbar{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media(max-width:560px){
+      .payment-status-options,
+      .accrued-summary,
+      .accrued-toolbar{
+        grid-template-columns:1fr;
+      }
+    }
+
 </style>
 </head>
 
@@ -677,7 +946,8 @@
       <div class="card-title">Expense Information</div>
 
       <div class="flow-note">
-        Add Expense is for expenses already paid now. Every saved record is stored as <strong>PAID</strong>.
+        Use one form for both <strong>Paid</strong> and <strong>Unpaid</strong> expenses.
+        Paid expenses go to <strong>Expense History</strong>. Unpaid expenses go to <strong>Accrued Expenses</strong>.
       </div>
 
       <div class="grid-2">
@@ -731,6 +1001,24 @@
     <div class="card">
       <div class="card-title">Amount & Payment</div>
 
+      <div class="payment-status-box">
+        <label>Payment Status</label>
+
+        <div class="payment-status-options">
+          <button class="payment-status-btn active" type="button" id="paymentStatusPaid">✅ Paid</button>
+          <button class="payment-status-btn" type="button" id="paymentStatusUnpaid">⏳ Unpaid</button>
+        </div>
+
+        <select id="paymentStatus" class="hidden-select" tabindex="-1" aria-hidden="true">
+          <option value="PAID">Paid</option>
+          <option value="UNPAID">Unpaid</option>
+        </select>
+
+        <div class="payment-status-help" id="paymentStatusHelp">
+          Paid expense will be saved directly into Expense History.
+        </div>
+      </div>
+
       <div class="grid-2">
 
         <div class="money-card">
@@ -767,16 +1055,21 @@
         </div>
 
         <div>
-          <div class="field">
+          <div class="field conditional-payment-field" id="paidPaymentMethodWrap">
             <label for="paymentMethod">Payment Method</label>
             <select id="paymentMethod" required>
               <option value="">Select Payment Method</option>
             </select>
           </div>
 
+          <div class="field conditional-payment-field" id="unpaidDueDateWrap" hidden>
+            <label for="dueDate">Due Date</label>
+            <input id="dueDate" type="date">
+          </div>
+
           <div class="field" style="margin-top:10px">
             <label for="referenceNo">Reference / Receipt No. (Optional)</label>
-            <input id="referenceNo" type="text" autocomplete="off" placeholder="Receipt, transfer or reference number">
+            <input id="referenceNo" type="text" autocomplete="off" placeholder="Invoice, receipt, transfer or reference number">
           </div>
         </div>
 
@@ -813,11 +1106,16 @@
             <small>Amount</small>
             <strong id="successAmount"></strong>
           </div>
+
+          <div class="success-meta">
+            <small>Status</small>
+            <strong id="successStatus"></strong>
+          </div>
         </div>
 
         <div class="actions">
           <button class="btn secondary" type="button" id="addAnotherBtn">➕ Add Another Expense</button>
-          <button class="btn primary" type="button" id="focusAmountBtn">Key In Amount</button>
+          <button class="btn primary" type="button" id="successViewBtn">View Expense</button>
         </div>
       </div>
 
@@ -827,13 +1125,119 @@
 
   </section>
 
+  <section class="view-section" id="viewAccruedExpenses" hidden>
+
+    <div class="card">
+      <div class="card-title">⏳ Accrued Expenses</div>
+
+      <div class="flow-note">
+        Shows outstanding expenses saved as <strong>Unpaid</strong>. Partial payments stay here until the balance reaches zero.
+        Once fully paid, the expense automatically moves to <strong>Expense History</strong>.
+      </div>
+
+      <div class="accrued-toolbar">
+
+        <div class="field">
+          <label for="accruedSearch">Search</label>
+          <input id="accruedSearch" type="search" placeholder="Expense ID, payee, category, description...">
+        </div>
+
+        <div class="field">
+          <label for="accruedType">Expense Type</label>
+          <select id="accruedType">
+            <option value="">All Types</option>
+            <option value="OPERATING EXPENSE">Operating Expense</option>
+            <option value="NON-OPERATING EXPENSE">Non-Operating Expense</option>
+            <option value="CAPITAL EXPENSE">Capital Expense</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="accruedStatus">Status</label>
+          <select id="accruedStatus">
+            <option value="">All Outstanding</option>
+            <option value="UNPAID">Unpaid</option>
+            <option value="PARTIAL">Partial</option>
+            <option value="OVERDUE">Overdue</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="accruedCurrency">Currency</label>
+          <select id="accruedCurrency">
+            <option value="">All Currency</option>
+            <option value="USD">USD</option>
+            <option value="KHR">KHR</option>
+          </select>
+        </div>
+
+        <button class="btn secondary" type="button" id="accruedRefreshBtn">↻ Refresh</button>
+      </div>
+
+      <div class="accrued-summary">
+        <div class="accrued-kpi">
+          <small>Outstanding Records</small>
+          <strong id="accruedCount">0</strong>
+        </div>
+
+        <div class="accrued-kpi">
+          <small>Outstanding USD</small>
+          <strong id="accruedOutstandingUsd">$0.00</strong>
+        </div>
+
+        <div class="accrued-kpi">
+          <small>Unpaid</small>
+          <strong id="accruedUnpaidCount">0</strong>
+        </div>
+
+        <div class="accrued-kpi">
+          <small>Overdue</small>
+          <strong id="accruedOverdueCount">0</strong>
+        </div>
+      </div>
+
+      <div class="accrued-status-message" id="accruedMessage"></div>
+
+      <div class="accrued-table-wrap">
+        <table class="accrued-table">
+          <thead>
+            <tr>
+              <th>Expense ID</th>
+              <th>Expense Date</th>
+              <th>Due Date</th>
+              <th>Expense Type</th>
+              <th>Category</th>
+              <th>Payee</th>
+              <th>Description</th>
+              <th>Original Amount</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th>Due</th>
+              <th>Action</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="accruedRows">
+            <tr>
+              <td colspan="14" class="history-loading">Loading Accrued Expenses...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="history-count" id="accruedCountText"></div>
+    </div>
+
+  </section>
+
   <section class="view-section" id="viewExpenseHistory" hidden>
 
     <div class="card">
       <div class="card-title">📜 Expense History</div>
 
       <div class="flow-note">
-        Shows every expense saved from <strong>Add Expense</strong>. Newest records are shown first.
+        Shows fully <strong>PAID</strong> expenses, including accrued expenses after the accountant clears the balance.
       </div>
 
       <div class="history-toolbar">
@@ -932,6 +1336,84 @@
 
 </div>
 
+<div class="payment-overlay" id="expensePaymentOverlay" hidden>
+  <div class="payment-modal">
+
+    <div class="payment-modal-head">
+      <h2>💳 Record Expense Payment</h2>
+      <button class="detail-close" type="button" id="expensePaymentCloseBtn">✕</button>
+    </div>
+
+    <div class="payment-modal-body">
+
+      <div class="payment-summary-box">
+        <div class="payment-summary-line">
+          <span>Expense ID</span>
+          <strong id="paymentExpenseId">-</strong>
+        </div>
+        <div class="payment-summary-line">
+          <span>Payee</span>
+          <strong id="paymentPayee">-</strong>
+        </div>
+        <div class="payment-summary-line">
+          <span>Total Expense</span>
+          <strong id="paymentTotal">-</strong>
+        </div>
+        <div class="payment-summary-line">
+          <span>Already Paid</span>
+          <strong id="paymentAlreadyPaid">-</strong>
+        </div>
+        <div class="payment-summary-line">
+          <span>Outstanding Balance</span>
+          <strong id="paymentBalance">-</strong>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="expensePaymentDate">Payment Date</label>
+          <input id="expensePaymentDate" type="date">
+        </div>
+
+        <div class="field">
+          <label for="expensePaymentAmount">Payment Amount</label>
+          <input id="expensePaymentAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+        </div>
+
+        <div class="field">
+          <label for="expensePaymentMethod">Payment Method</label>
+          <select id="expensePaymentMethod">
+            <option value="">Select Payment Method</option>
+          </select>
+        </div>
+
+        <div class="field conditional-payment-field" id="expensePaymentRateWrap" hidden>
+          <label for="expensePaymentRate">Exchange Rate (1 USD = KHR)</label>
+          <input id="expensePaymentRate" type="number" min="1" step="1" inputmode="decimal">
+        </div>
+
+        <div class="field full">
+          <label for="expensePaymentReference">Reference No. (Optional)</label>
+          <input id="expensePaymentReference" type="text" autocomplete="off">
+        </div>
+
+        <div class="field full">
+          <label for="expensePaymentNote">Note (Optional)</label>
+          <textarea id="expensePaymentNote"></textarea>
+        </div>
+      </div>
+
+      <div class="accrued-status-message" id="expensePaymentMessage"></div>
+
+      <div class="actions">
+        <button class="btn secondary" type="button" id="expensePaymentCancelBtn">Cancel</button>
+        <button class="btn primary" type="button" id="expensePaymentConfirmBtn">Confirm Payment</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class="detail-overlay" id="expenseDetailOverlay" hidden>
   <div class="detail-modal">
     <div class="detail-head">
@@ -974,12 +1456,17 @@
   var bootstrap = null;
   var allExpenses = [];
   var historyLoaded = false;
+  var accruedExpenses = [];
+  var accruedLoaded = false;
+  var selectedAccruedExpenseId = "";
 
   var requestedView = clean(params.get("view")).toLowerCase();
   var currentView =
     requestedView === "expense-history" || requestedView === "history"
       ? "expense-history"
-      : "add-expense";
+      : requestedView === "accrued-expenses" || requestedView === "accrued"
+        ? "accrued-expenses"
+        : "add-expense";
 
   function jsonp(url,query,timeout){
     query = query || {};
@@ -1050,7 +1537,7 @@
     });
   }
 
-  async function expenseApiPost(payload,timeout){
+  async function expenseApiPostAction(action,payload,timeout){
     timeout = timeout || 20000;
 
     var controller = new AbortController();
@@ -1062,12 +1549,12 @@
       var body = new URLSearchParams();
       var postPayload = Object.assign(
         {
-          action:"createExpense"
+          action:action
         },
         payload || {}
       );
 
-      body.set("action","createExpense");
+      body.set("action",action);
       body.set("payload",JSON.stringify(postPayload));
 
       var response = await fetch(
@@ -1119,6 +1606,15 @@
     }
   }
 
+  function expenseApiPost(payload,timeout){
+    return expenseApiPostAction(
+      "createExpense",
+      payload,
+      timeout
+    );
+  }
+
+
   function esc(value){
     return clean(value)
       .replace(/&/g,"&amp;")
@@ -1157,16 +1653,21 @@
   }
 
   function setPageView(view){
-    currentView = view === "expense-history"
-      ? "expense-history"
-      : "add-expense";
+    if(view === "expense-history"){
+      currentView = "expense-history";
+    }else if(view === "accrued-expenses"){
+      currentView = "accrued-expenses";
+    }else{
+      currentView = "add-expense";
+    }
 
     $("viewAddExpense").hidden = currentView !== "add-expense";
+    $("viewAccruedExpenses").hidden = currentView !== "accrued-expenses";
     $("viewExpenseHistory").hidden = currentView !== "expense-history";
 
     if(currentView === "expense-history"){
       $("pageTitle").textContent = "📜 BIG BROTHER — Expense History";
-      $("pageSubtitle").textContent = "All paid expense records saved from Add Expense.";
+      $("pageSubtitle").textContent = "Fully paid and cleared expense records.";
       document.title = "BIG BROTHER — Expense History";
 
       if(!historyLoaded){
@@ -1174,9 +1675,21 @@
       }else{
         renderExpenseHistory();
       }
+
+    }else if(currentView === "accrued-expenses"){
+      $("pageTitle").textContent = "⏳ BIG BROTHER — Accrued Expenses";
+      $("pageSubtitle").textContent = "Outstanding unpaid and partially paid expenses.";
+      document.title = "BIG BROTHER — Accrued Expenses";
+
+      if(!accruedLoaded){
+        loadAccruedExpenses();
+      }else{
+        renderAccruedExpenses();
+      }
+
     }else{
       $("pageTitle").textContent = "💸 BIG BROTHER — Add Expense";
-      $("pageSubtitle").textContent = "Record paid expenses. Unpaid expenses will be handled later in Accrued Expenses.";
+      $("pageSubtitle").textContent = "Record paid or unpaid business expenses.";
       document.title = "BIG BROTHER — Add Expense";
     }
   }
@@ -1190,7 +1703,8 @@
     jsonp(
       EXPENSE_API,
       {
-        action:"getExpenses"
+        action:"getExpenses",
+        status:"PAID"
       }
     )
       .then(function(data){
@@ -1208,6 +1722,466 @@
         $("historyTotalUsd").textContent = "$0.00";
         $("historyOriginalUsd").textContent = "$0.00";
         $("historyOriginalKhr").textContent = "0 ៛";
+      });
+  }
+
+  function setAccruedMessage(message,error){
+    $("accruedMessage").textContent = clean(message);
+    $("accruedMessage").classList.toggle("error",!!error);
+  }
+
+  function loadAccruedExpenses(){
+    $("accruedRows").innerHTML =
+      '<tr><td colspan="14" class="history-loading">Loading Accrued Expenses...</td></tr>';
+
+    $("accruedCountText").textContent = "";
+    setAccruedMessage("",false);
+
+    jsonp(
+      EXPENSE_API,
+      {
+        action:"getAccruedExpenses"
+      }
+    )
+      .then(function(data){
+        accruedExpenses = Array.isArray(data) ? data : [];
+        accruedLoaded = true;
+        renderAccruedExpenses();
+      })
+      .catch(function(error){
+        $("accruedRows").innerHTML =
+          '<tr><td colspan="14" class="history-empty">' +
+            esc(error && error.message ? error.message : "Could not load Accrued Expenses.") +
+          '</td></tr>';
+
+        $("accruedCount").textContent = "0";
+        $("accruedOutstandingUsd").textContent = "$0.00";
+        $("accruedUnpaidCount").textContent = "0";
+        $("accruedOverdueCount").textContent = "0";
+
+        setAccruedMessage(
+          error && error.message
+            ? error.message
+            : "Could not load Accrued Expenses.",
+          true
+        );
+      });
+  }
+
+  function dayStart(value){
+    var raw = clean(value);
+    if(!raw) return null;
+
+    var parts = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(parts){
+      return new Date(
+        Number(parts[1]),
+        Number(parts[2]) - 1,
+        Number(parts[3])
+      );
+    }
+
+    var d = new Date(raw);
+    if(Number.isNaN(d.getTime())) return null;
+
+    return new Date(
+      d.getFullYear(),
+      d.getMonth(),
+      d.getDate()
+    );
+  }
+
+  function accruedDueInfo(expense){
+    var due = dayStart(expense.dueDate);
+    var today = dayStart(todayValue());
+
+    if(!due || !today){
+      return {
+        overdue:false,
+        today:false,
+        text:"No due date"
+      };
+    }
+
+    var diff = Math.round(
+      (due.getTime() - today.getTime()) / 86400000
+    );
+
+    if(diff < 0){
+      return {
+        overdue:true,
+        today:false,
+        text:Math.abs(diff) + " day" + (Math.abs(diff) === 1 ? "" : "s") + " overdue"
+      };
+    }
+
+    if(diff === 0){
+      return {
+        overdue:false,
+        today:true,
+        text:"Due today"
+      };
+    }
+
+    return {
+      overdue:false,
+      today:false,
+      text:"Due in " + diff + " day" + (diff === 1 ? "" : "s")
+    };
+  }
+
+  function accruedFilteredExpenses(){
+    var query = clean($("accruedSearch").value).toLowerCase();
+    var type = clean($("accruedType").value);
+    var statusFilter = clean($("accruedStatus").value);
+    var currencyFilter = clean($("accruedCurrency").value);
+
+    return accruedExpenses.filter(function(expense){
+      var status = clean(expense.status).toUpperCase();
+      var due = accruedDueInfo(expense);
+
+      if(type && clean(expense.expenseType) !== type){
+        return false;
+      }
+
+      if(
+        currencyFilter &&
+        clean(expense.currency) !== currencyFilter
+      ){
+        return false;
+      }
+
+      if(statusFilter === "OVERDUE"){
+        if(!due.overdue) return false;
+      }else if(
+        statusFilter &&
+        status !== statusFilter
+      ){
+        return false;
+      }
+
+      if(query){
+        var haystack = [
+          expense.expenseId,
+          expense.expenseDate,
+          expense.dueDate,
+          expense.expenseType,
+          expense.category,
+          expense.payee,
+          expense.description,
+          expense.currency,
+          expense.amount,
+          expense.paidAmount,
+          expense.balance,
+          expense.status,
+          expense.referenceNo,
+          expense.note
+        ]
+          .map(clean)
+          .join(" ")
+          .toLowerCase();
+
+        if(haystack.indexOf(query) === -1){
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  function renderAccruedExpenses(){
+    var rows = accruedFilteredExpenses();
+
+    var totalOutstandingUsd = 0;
+    var unpaidCount = 0;
+    var overdueCount = 0;
+
+    rows.forEach(function(expense){
+      var balance = Math.max(0,num(expense.balance));
+      var original = Math.max(0,num(expense.amount));
+      var amountUsd = Math.max(0,num(expense.amountUSD));
+      var balanceUsd = original > 0
+        ? amountUsd * (balance / original)
+        : 0;
+
+      totalOutstandingUsd += balanceUsd;
+
+      if(clean(expense.status).toUpperCase() === "UNPAID"){
+        unpaidCount++;
+      }
+
+      if(accruedDueInfo(expense).overdue){
+        overdueCount++;
+      }
+    });
+
+    $("accruedCount").textContent =
+      rows.length.toLocaleString("en-US");
+
+    $("accruedOutstandingUsd").textContent =
+      formatMoney(totalOutstandingUsd,"USD");
+
+    $("accruedUnpaidCount").textContent =
+      unpaidCount.toLocaleString("en-US");
+
+    $("accruedOverdueCount").textContent =
+      overdueCount.toLocaleString("en-US");
+
+    $("accruedCountText").textContent =
+      "Showing " +
+      rows.length.toLocaleString("en-US") +
+      " of " +
+      accruedExpenses.length.toLocaleString("en-US") +
+      " outstanding expense record" +
+      (accruedExpenses.length === 1 ? "" : "s") +
+      ".";
+
+    if(!rows.length){
+      $("accruedRows").innerHTML =
+        '<tr><td colspan="14" class="history-empty">No outstanding accrued expenses match the current filters.</td></tr>';
+      return;
+    }
+
+    $("accruedRows").innerHTML = rows.map(function(expense){
+      var cur = clean(expense.currency) === "KHR" ? "KHR" : "USD";
+      var status = clean(expense.status).toUpperCase() || "UNPAID";
+      var due = accruedDueInfo(expense);
+
+      var dueClass = due.overdue
+        ? "accrued-overdue"
+        : due.today
+          ? "accrued-due-today"
+          : "history-muted";
+
+      var statusClass = status === "PARTIAL"
+        ? "badge-partial"
+        : "badge-unpaid";
+
+      return [
+        "<tr>",
+          '<td class="history-id">',esc(expense.expenseId),"</td>",
+          "<td>",esc(formatDateDDMMYYYY(expense.expenseDate)),"</td>",
+          '<td class="',dueClass,'">',esc(formatDateDDMMYYYY(expense.dueDate)),"</td>",
+          "<td>",esc(displayType(expense.expenseType)),"</td>",
+          "<td>",esc(expense.category),"</td>",
+          "<td>",esc(expense.payee),"</td>",
+          "<td>",esc(expense.description),"</td>",
+          '<td class="history-amount">',esc(formatMoney(expense.amount,cur)),"</td>",
+          '<td class="history-amount">',esc(formatMoney(expense.paidAmount,cur)),"</td>",
+          '<td class="history-amount">',esc(formatMoney(expense.balance,cur)),"</td>",
+          '<td><span class="',statusClass,'">',esc(status),"</span></td>",
+          '<td class="',dueClass,'">',esc(due.text),"</td>",
+          '<td><button type="button" class="record-payment-btn" data-accrued-pay="',esc(expense.expenseId),'">Record Payment</button></td>',
+          '<td><button type="button" class="history-view-btn" data-accrued-view="',esc(expense.expenseId),'">View</button></td>',
+        "</tr>"
+      ].join("");
+    }).join("");
+
+    $("accruedRows")
+      .querySelectorAll("[data-accrued-pay]")
+      .forEach(function(button){
+        button.addEventListener("click",function(){
+          openExpensePaymentModal(button.dataset.accruedPay);
+        });
+      });
+
+    $("accruedRows")
+      .querySelectorAll("[data-accrued-view]")
+      .forEach(function(button){
+        button.addEventListener("click",function(){
+          showExpenseDetail(button.dataset.accruedView);
+        });
+      });
+  }
+
+  function findExpenseAnywhere(expenseId){
+    var id = clean(expenseId);
+
+    return accruedExpenses.find(function(item){
+      return clean(item.expenseId) === id;
+    }) || allExpenses.find(function(item){
+      return clean(item.expenseId) === id;
+    }) || null;
+  }
+
+  function fillExpensePaymentMethods(){
+    var select = $("expensePaymentMethod");
+    select.innerHTML = '<option value="">Select Payment Method</option>';
+
+    var methods = bootstrap && Array.isArray(bootstrap.paymentMethods)
+      ? bootstrap.paymentMethods
+      : ["Cash","ABA","Bank Transfer","Card","Other"];
+
+    methods.forEach(function(method){
+      var option = document.createElement("option");
+      option.value = method;
+      option.textContent = method;
+      select.appendChild(option);
+    });
+  }
+
+  function openExpensePaymentModal(expenseId){
+    var expense = accruedExpenses.find(function(item){
+      return clean(item.expenseId) === clean(expenseId);
+    });
+
+    if(!expense) return;
+
+    selectedAccruedExpenseId = clean(expense.expenseId);
+
+    var cur = clean(expense.currency) === "KHR" ? "KHR" : "USD";
+
+    $("paymentExpenseId").textContent = expense.expenseId;
+    $("paymentPayee").textContent = expense.payee || "-";
+    $("paymentTotal").textContent = formatMoney(expense.amount,cur);
+    $("paymentAlreadyPaid").textContent = formatMoney(expense.paidAmount,cur);
+    $("paymentBalance").textContent = formatMoney(expense.balance,cur);
+
+    $("expensePaymentDate").value = todayValue();
+    $("expensePaymentAmount").value =
+      cur === "KHR"
+        ? Math.round(num(expense.balance))
+        : num(expense.balance).toFixed(2);
+
+    $("expensePaymentAmount").max = String(num(expense.balance));
+    $("expensePaymentAmount").step = cur === "KHR" ? "1" : "0.01";
+
+    fillExpensePaymentMethods();
+    $("expensePaymentReference").value = "";
+    $("expensePaymentNote").value = "";
+    $("expensePaymentMessage").textContent = "";
+    $("expensePaymentMessage").classList.remove("error");
+
+    var showRate = cur === "KHR";
+    $("expensePaymentRateWrap").hidden = !showRate;
+
+    $("expensePaymentRate").value =
+      showRate
+        ? String(
+            num(expense.exchangeRate) > 0
+              ? num(expense.exchangeRate)
+              : rate()
+          )
+        : "";
+
+    $("expensePaymentOverlay").hidden = false;
+
+    setTimeout(function(){
+      $("expensePaymentAmount").focus();
+      $("expensePaymentAmount").select();
+    },30);
+  }
+
+  function closeExpensePaymentModal(){
+    $("expensePaymentOverlay").hidden = true;
+    selectedAccruedExpenseId = "";
+  }
+
+  function setExpensePaymentMessage(message,error){
+    $("expensePaymentMessage").textContent = clean(message);
+    $("expensePaymentMessage").classList.toggle("error",!!error);
+  }
+
+  function confirmExpensePayment(){
+    var expense = accruedExpenses.find(function(item){
+      return clean(item.expenseId) === clean(selectedAccruedExpenseId);
+    });
+
+    if(!expense){
+      setExpensePaymentMessage("Expense not found.",true);
+      return;
+    }
+
+    var paymentAmount = num($("expensePaymentAmount").value);
+    var balance = num(expense.balance);
+    var paymentDate = clean($("expensePaymentDate").value);
+    var paymentMethod = clean($("expensePaymentMethod").value);
+
+    if(!paymentDate){
+      setExpensePaymentMessage("Payment Date is required.",true);
+      return;
+    }
+
+    if(!(paymentAmount > 0)){
+      setExpensePaymentMessage("Payment Amount must be greater than zero.",true);
+      return;
+    }
+
+    if(paymentAmount > balance + 0.000001){
+      setExpensePaymentMessage("Payment Amount cannot exceed the outstanding balance.",true);
+      return;
+    }
+
+    if(!paymentMethod){
+      setExpensePaymentMessage("Payment Method is required.",true);
+      return;
+    }
+
+    var button = $("expensePaymentConfirmBtn");
+    var oldText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+    setExpensePaymentMessage("Recording payment...",false);
+
+    expenseApiPostAction(
+      "recordExpensePayment",
+      {
+        expenseId:expense.expenseId,
+        paymentDate:paymentDate,
+        paymentAmount:paymentAmount,
+        paymentMethod:paymentMethod,
+        exchangeRate:num($("expensePaymentRate").value),
+        referenceNo:clean($("expensePaymentReference").value),
+        note:clean($("expensePaymentNote").value)
+      }
+    )
+      .then(function(result){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        if(!result || !result.success){
+          setExpensePaymentMessage(
+            result && result.error
+              ? result.error
+              : "Could not record payment.",
+            true
+          );
+          return;
+        }
+
+        closeExpensePaymentModal();
+
+        historyLoaded = false;
+        accruedLoaded = false;
+
+        loadAccruedExpenses();
+
+        var newStatus = clean(result.expense && result.expense.status);
+
+        if(newStatus === "PAID"){
+          setAccruedMessage(
+            "Expense fully paid and moved to Expense History.",
+            false
+          );
+        }else{
+          setAccruedMessage(
+            "Partial payment saved. Remaining balance stays in Accrued Expenses.",
+            false
+          );
+        }
+      })
+      .catch(function(error){
+        button.disabled = false;
+        button.textContent = oldText;
+
+        setExpensePaymentMessage(
+          error && error.message
+            ? error.message
+            : "Could not record payment.",
+          true
+        );
       });
   }
 
@@ -1343,9 +2317,7 @@
   }
 
   function showExpenseDetail(expenseId){
-    var expense = allExpenses.find(function(item){
-      return clean(item.expenseId) === clean(expenseId);
-    });
+    var expense = findExpenseAnywhere(expenseId);
 
     if(!expense) return;
 
@@ -1536,6 +2508,59 @@
     return clean($("category").value);
   }
 
+  function setPaymentStatus(next){
+    next = clean(next).toUpperCase() === "UNPAID"
+      ? "UNPAID"
+      : "PAID";
+
+    $("paymentStatus").value = next;
+
+    $("paymentStatusPaid").classList.toggle(
+      "active",
+      next === "PAID"
+    );
+
+    $("paymentStatusUnpaid").classList.toggle(
+      "active",
+      next === "UNPAID"
+    );
+
+    $("paidPaymentMethodWrap").hidden =
+      next !== "PAID";
+
+    $("unpaidDueDateWrap").hidden =
+      next !== "UNPAID";
+
+    $("paymentMethod").required =
+      next === "PAID";
+
+    $("dueDate").required =
+      next === "UNPAID";
+
+    if(next === "PAID"){
+      $("dueDate").value = "";
+
+      $("paymentStatusHelp").textContent =
+        "Paid expense will be saved directly into Expense History.";
+
+      $("paymentStatusHelp").classList.remove("unpaid-note");
+
+      $("saveBtn").textContent =
+        "💾 Save Paid Expense";
+
+    }else{
+      $("paymentMethod").value = "";
+
+      $("paymentStatusHelp").textContent =
+        "Unpaid expense will be saved into Accrued Expenses until the accountant clears the balance.";
+
+      $("paymentStatusHelp").classList.add("unpaid-note");
+
+      $("saveBtn").textContent =
+        "⏳ Save Unpaid Expense";
+    }
+  }
+
   function collectPayload(){
     return {
       expenseDate:clean($("expenseDate").value),
@@ -1546,7 +2571,9 @@
       currency:currency(),
       exchangeRate:rate(),
       amount:num($("amount").value),
+      paymentStatus:clean($("paymentStatus").value),
       paymentMethod:clean($("paymentMethod").value),
+      dueDate:clean($("dueDate").value),
       referenceNo:clean($("referenceNo").value),
       note:clean($("note").value)
     };
@@ -1560,7 +2587,15 @@
     if(!data.description) return "Description is required.";
     if(!(data.amount > 0)) return "Amount must be greater than zero.";
     if(data.currency === "KHR" && !(data.exchangeRate > 0)) return "Exchange Rate is required for KHR.";
-    if(!data.paymentMethod) return "Payment Method is required.";
+
+    if(data.paymentStatus === "PAID" && !data.paymentMethod){
+      return "Payment Method is required for a paid expense.";
+    }
+
+    if(data.paymentStatus === "UNPAID" && !data.dueDate){
+      return "Due Date is required for an unpaid expense.";
+    }
+
     return "";
   }
 
@@ -1569,6 +2604,7 @@
 
     setExpenseType("OPERATING EXPENSE");
     setCurrency("USD");
+    setPaymentStatus("PAID");
     $("expenseDate").value = todayValue();
 
     if(bootstrap){
@@ -1597,6 +2633,18 @@
     $("successType").textContent = displayType(expense.expenseType);
     $("successCategory").textContent = expense.category || "-";
     $("successAmount").textContent = formatMoney(expense.amount,expense.currency || "USD");
+    $("successStatus").textContent = expense.status || "-";
+
+    $("successViewBtn").textContent =
+      expense.status === "UNPAID"
+        ? "View Accrued Expenses"
+        : "View Expense History";
+
+    $("successViewBtn").dataset.targetView =
+      expense.status === "UNPAID"
+        ? "accrued-expenses"
+        : "expense-history";
+
     $("successCard").hidden = false;
 
     $("successCard").scrollIntoView({
@@ -1641,6 +2689,7 @@
 
         setStatus("Expense saved successfully.",false);
         historyLoaded = false;
+        accruedLoaded = false;
         showSuccess(result);
       })
       .catch(function(error){
@@ -1661,6 +2710,13 @@
     loadRatePreference();
     setCurrency("USD");
     setExpenseType("OPERATING EXPENSE");
+    setPaymentStatus("PAID");
+
+    // V1.4: apply the route immediately.
+    // Expense History no longer waits for bootstrap/categories/payment methods.
+    setPageView(currentView);
+
+    $("dbStatus").textContent = "Connecting Expenses Database...";
 
     jsonp(
       EXPENSE_API,
@@ -1684,18 +2740,22 @@
         );
 
         $("dbStatus").textContent = "Expenses Database Ready";
-        setStatus("Ready to add expense.",false);
-        setPageView(currentView);
+
+        if(currentView === "add-expense"){
+          setStatus("Ready to add expense.",false);
+        }
       })
       .catch(function(error){
         $("dbStatus").textContent = "Database Error";
-        setStatus(
-          error && error.message
-            ? error.message
-            : "Could not prepare Expenses Database.",
-          true
-        );
-        setPageView(currentView);
+
+        if(currentView === "add-expense"){
+          setStatus(
+            error && error.message
+              ? error.message
+              : "Could not prepare Expenses Database.",
+            true
+          );
+        }
       });
   }
 
@@ -1720,16 +2780,58 @@
 
   $("category").addEventListener("change",handleCategoryChange);
 
+  $("paymentStatusPaid").addEventListener("click",function(){
+    setPaymentStatus("PAID");
+  });
+
+  $("paymentStatusUnpaid").addEventListener("click",function(){
+    setPaymentStatus("UNPAID");
+  });
+
   $("clearBtn").addEventListener("click",clearForm);
   $("addAnotherBtn").addEventListener("click",clearForm);
 
-  $("focusAmountBtn").addEventListener("click",function(){
+  $("successViewBtn").addEventListener("click",function(){
+    var view = clean($("successViewBtn").dataset.targetView);
+
     $("successCard").hidden = true;
-    $("amount").focus();
-    $("amount").select();
+    setPageView(view || "expense-history");
   });
 
   $("expenseForm").addEventListener("submit",handleSave);
+
+  [
+    "accruedSearch",
+    "accruedType",
+    "accruedStatus",
+    "accruedCurrency"
+  ].forEach(function(id){
+    var element = $(id);
+
+    element.addEventListener(
+      id === "accruedSearch" ? "input" : "change",
+      function(){
+        if(accruedLoaded){
+          renderAccruedExpenses();
+        }
+      }
+    );
+  });
+
+  $("accruedRefreshBtn").addEventListener("click",function(){
+    accruedLoaded = false;
+    loadAccruedExpenses();
+  });
+
+  $("expensePaymentCloseBtn").addEventListener("click",closeExpensePaymentModal);
+  $("expensePaymentCancelBtn").addEventListener("click",closeExpensePaymentModal);
+  $("expensePaymentConfirmBtn").addEventListener("click",confirmExpensePayment);
+
+  $("expensePaymentOverlay").addEventListener("click",function(event){
+    if(event.target === $("expensePaymentOverlay")){
+      closeExpensePaymentModal();
+    }
+  });
 
   [
     "historySearch",
@@ -1766,6 +2868,28 @@
   document.addEventListener("keydown",function(event){
     if(event.key === "Escape"){
       closeExpenseDetail();
+      closeExpensePaymentModal();
+    }
+  });
+
+  window.addEventListener("message",function(event){
+    var data = event && event.data ? event.data : null;
+
+    if(
+      !data ||
+      data.type !== "bb-expenses-view"
+    ){
+      return;
+    }
+
+    var view = clean(data.view).toLowerCase();
+
+    if(view === "expense-history"){
+      setPageView("expense-history");
+    }else if(view === "accrued-expenses"){
+      setPageView("accrued-expenses");
+    }else if(view === "add-expense"){
+      setPageView("add-expense");
     }
   });
 
