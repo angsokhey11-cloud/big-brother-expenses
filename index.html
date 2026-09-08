@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BIG BROTHER — Add Expense</title>
+  <title>BIG BROTHER — Add Expense V1.1</title>
 
   <style>
     :root{
@@ -369,7 +369,23 @@
       .success-grid{grid-template-columns:1fr}
       input,select,textarea{font-size:16px}
     }
-  </style>
+  
+    /* V1.1 — GitHub Pages / Dashboard shell mode */
+    body.embed{
+      background:#eef3f8;
+    }
+
+    body.embed .app{
+      width:100%;
+      max-width:none;
+      padding:10px;
+    }
+
+    body.embed .topbar{
+      display:none;
+    }
+
+</style>
 </head>
 
 <body>
@@ -545,6 +561,14 @@
 (function(){
   "use strict";
 
+  var EXPENSE_API = "https://script.google.com/macros/s/AKfycbwkR-nBsHZQtd8KFd_bVTy9-PCpcGzeoy1a7nRaqxZd42rHeKzFz1OBCM2h6ULU4BiC/exec";
+  var params = new URLSearchParams(window.location.search);
+  var embed = params.get("embed") === "1" || !!params.get("shellModule");
+
+  if(embed){
+    document.body.classList.add("embed");
+  }
+
   var RATE_KEY = "bb_expense_exchange_rate_v1";
 
   var $ = function(id){
@@ -561,6 +585,144 @@
   };
 
   var bootstrap = null;
+
+  function jsonp(url,query,timeout){
+    query = query || {};
+    timeout = timeout || 18000;
+
+    return new Promise(function(resolve,reject){
+      var callback =
+        "bbExpense_" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).slice(2);
+
+      var script = document.createElement("script");
+      var settled = false;
+
+      function finish(error,data){
+        if(settled) return;
+        settled = true;
+        clearTimeout(timer);
+
+        try{
+          delete window[callback];
+        }catch(_){
+          window[callback] = undefined;
+        }
+
+        script.remove();
+
+        if(error) reject(error);
+        else resolve(data);
+      }
+
+      window[callback] = function(data){
+        finish(null,data);
+      };
+
+      script.onerror = function(){
+        finish(
+          new Error("Expenses Database connection failed.")
+        );
+      };
+
+      var qs = new URLSearchParams();
+
+      Object.keys(query).forEach(function(key){
+        var value = query[key];
+
+        if(value !== undefined && value !== null){
+          qs.set(key,String(value));
+        }
+      });
+
+      qs.set("callback",callback);
+      qs.set("t",Date.now());
+
+      script.src =
+        url +
+        (url.indexOf("?") >= 0 ? "&" : "?") +
+        qs.toString();
+
+      document.body.appendChild(script);
+
+      var timer = setTimeout(function(){
+        finish(
+          new Error("Expenses Database request timed out.")
+        );
+      },timeout);
+    });
+  }
+
+  async function expenseApiPost(payload,timeout){
+    timeout = timeout || 20000;
+
+    var controller = new AbortController();
+    var timer = setTimeout(function(){
+      controller.abort();
+    },timeout);
+
+    try{
+      var body = new URLSearchParams();
+      var postPayload = Object.assign(
+        {
+          action:"createExpense"
+        },
+        payload || {}
+      );
+
+      body.set("action","createExpense");
+      body.set("payload",JSON.stringify(postPayload));
+
+      var response = await fetch(
+        EXPENSE_API,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/x-www-form-urlencoded;charset=UTF-8"
+          },
+          body:body,
+          redirect:"follow",
+          signal:controller.signal
+        }
+      );
+
+      var text = await response.text();
+      var data;
+
+      try{
+        data = JSON.parse(text);
+      }catch(_){
+        throw new Error(
+          "Expenses Database returned an unreadable response."
+        );
+      }
+
+      if(!response.ok){
+        throw new Error(
+          data && data.error
+            ? data.error
+            : "Expenses Database request failed."
+        );
+      }
+
+      return data;
+
+    }catch(error){
+      if(error && error.name === "AbortError"){
+        throw new Error(
+          "Expenses Database request timed out."
+        );
+      }
+
+      throw error;
+
+    }finally{
+      clearTimeout(timer);
+    }
+  }
 
   function todayValue(){
     var d = new Date();
@@ -791,8 +953,8 @@
     setStatus("Saving expense...",false);
     $("successCard").hidden = true;
 
-    google.script.run
-      .withSuccessHandler(function(result){
+    expenseApiPost(payload)
+      .then(function(result){
         button.disabled = false;
         button.textContent = oldText;
 
@@ -809,7 +971,7 @@
         setStatus("Expense saved successfully.",false);
         showSuccess(result);
       })
-      .withFailureHandler(function(error){
+      .catch(function(error){
         button.disabled = false;
         button.textContent = oldText;
 
@@ -819,8 +981,7 @@
             : "Could not save expense.",
           true
         );
-      })
-      .createExpense(payload);
+      });
   }
 
   function initialize(){
@@ -829,8 +990,13 @@
     setCurrency("USD");
     setExpenseType("OPERATING EXPENSE");
 
-    google.script.run
-      .withSuccessHandler(function(data){
+    jsonp(
+      EXPENSE_API,
+      {
+        action:"getExpenseBootstrap"
+      }
+    )
+      .then(function(data){
         bootstrap = data || {};
 
         fillCategories(
@@ -848,7 +1014,7 @@
         $("dbStatus").textContent = "Expenses Database Ready";
         setStatus("Ready to add expense.",false);
       })
-      .withFailureHandler(function(error){
+      .catch(function(error){
         $("dbStatus").textContent = "Database Error";
         setStatus(
           error && error.message
@@ -856,8 +1022,7 @@
             : "Could not prepare Expenses Database.",
           true
         );
-      })
-      .getExpenseBootstrap();
+      });
   }
 
   document.querySelectorAll(".type-btn").forEach(function(button){
