@@ -1,1 +1,2890 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>
+    BIG BROTHER — Monthly Expense Report
+  </title>
+
+
+  <style>
+
+    :root{
+
+      --navy:#173f77;
+      --blue:#245fae;
+      --bg:#eef3f8;
+      --card:#ffffff;
+      --line:#dce5ef;
+      --text:#172b43;
+      --muted:#6d7f93;
+
+      --green:#18864b;
+      --orange:#b87500;
+      --red:#c0392b;
+
+    }
+
+
+    *{
+      box-sizing:border-box;
+    }
+
+
+    html,
+    body{
+
+      margin:0;
+
+      min-height:100%;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background:
+        var(--bg);
+
+      color:
+        var(--text);
+
+    }
+
+
+    button,
+    input{
+      font:inherit;
+    }
+
+
+    [hidden]{
+      display:none !important;
+    }
+
+
+    .app{
+
+      width:
+        min(
+          1180px,
+          100%
+        );
+
+      margin:
+        0 auto;
+
+      padding:
+        16px;
+
+    }
+
+
+    body.embed .app{
+
+      width:100%;
+
+      max-width:none;
+
+      padding:10px;
+
+    }
+
+
+    body.embed .topbar{
+      display:none;
+    }
+
+
+    /* =====================================================
+       HEADER
+       ===================================================== */
+
+    .topbar{
+
+      display:flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        flex-start;
+
+      gap:15px;
+
+      margin-bottom:
+        14px;
+
+    }
+
+
+    .brand h1{
+
+      margin:0;
+
+      color:
+        var(--navy);
+
+      font-size:
+        25px;
+
+    }
+
+
+    .brand p{
+
+      margin:
+        5px 0 0;
+
+      color:
+        var(--muted);
+
+      font-size:
+        12px;
+
+      line-height:
+        1.5;
+
+    }
+
+
+    .status-pill{
+
+      border:
+        1px solid
+        #cbd8e7;
+
+      border-radius:
+        999px;
+
+      background:
+        #fff;
+
+      color:
+        #526b84;
+
+      padding:
+        8px 11px;
+
+      font-size:
+        10px;
+
+      font-weight:
+        900;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .status-pill.loading{
+
+      background:
+        #fff7e6;
+
+      color:
+        #986600;
+
+      border-color:
+        #efd79f;
+
+    }
+
+
+    .status-pill.success{
+
+      background:
+        #edf8f2;
+
+      color:
+        #18864b;
+
+      border-color:
+        #bfdfcb;
+
+    }
+
+
+    .status-pill.error{
+
+      background:
+        #fff0ef;
+
+      color:
+        var(--red);
+
+      border-color:
+        #efc4bf;
+
+    }
+
+
+
+    /* =====================================================
+       CARDS
+       ===================================================== */
+
+    .card{
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:
+        14px;
+
+      background:
+        var(--card);
+
+      padding:
+        14px;
+
+      margin-bottom:
+        12px;
+
+    }
+
+
+    .card-title{
+
+      color:
+        var(--navy);
+
+      font-size:
+        16px;
+
+      font-weight:
+        1000;
+
+      margin-bottom:
+        11px;
+
+    }
+
+
+    .flow-note{
+
+      border:
+        1px solid
+        #cfdef1;
+
+      border-radius:
+        10px;
+
+      background:
+        #f7fbff;
+
+      color:
+        #426482;
+
+      padding:
+        9px 10px;
+
+      font-size:
+        11px;
+
+      line-height:
+        1.5;
+
+      margin-bottom:
+        12px;
+
+    }
+
+
+
+    /* =====================================================
+       REPORT CONTROLS
+       ===================================================== */
+
+    .toolbar{
+
+      display:grid;
+
+      grid-template-columns:
+        auto
+        minmax(180px,260px)
+        auto
+        auto
+        auto;
+
+      gap:
+        8px;
+
+      align-items:
+        end;
+
+    }
+
+
+    .field label{
+
+      display:block;
+
+      color:
+        #64788d;
+
+      margin-bottom:
+        6px;
+
+      font-size:
+        9px;
+
+      font-weight:
+        1000;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        .3px;
+
+    }
+
+
+    input[type="month"]{
+
+      width:100%;
+
+      min-height:
+        42px;
+
+      border:
+        1px solid
+        #cbd8e7;
+
+      border-radius:
+        9px;
+
+      background:
+        #fff;
+
+      color:
+        var(--text);
+
+      padding:
+        8px 10px;
+
+    }
+
+
+    .btn{
+
+      min-height:
+        42px;
+
+      border:0;
+
+      border-radius:
+        9px;
+
+      padding:
+        8px 12px;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    .btn.secondary{
+
+      background:
+        #e9eef5;
+
+      color:
+        #36536f;
+
+    }
+
+
+    .btn.primary{
+
+      background:
+        var(--navy);
+
+      color:#fff;
+
+    }
+
+
+    .btn:disabled{
+
+      opacity:.55;
+
+      cursor:wait;
+
+    }
+
+
+    .check-wrap{
+
+      min-height:
+        42px;
+
+      display:flex;
+
+      align-items:center;
+
+      gap:7px;
+
+      border:
+        1px solid
+        #d8e2ed;
+
+      border-radius:
+        9px;
+
+      padding:
+        8px 10px;
+
+      background:
+        #fbfcfe;
+
+      color:
+        #526b84;
+
+      font-size:
+        10px;
+
+      font-weight:
+        900;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .check-wrap input{
+
+      width:
+        16px;
+
+      height:
+        16px;
+
+    }
+
+
+
+    /* =====================================================
+       KPI
+       ===================================================== */
+
+    .kpi-grid{
+
+      display:grid;
+
+      grid-template-columns:
+        repeat(
+          5,
+          minmax(0,1fr)
+        );
+
+      gap:
+        9px;
+
+      margin-bottom:
+        12px;
+
+    }
+
+
+    .kpi{
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:
+        12px;
+
+      background:
+        #fff;
+
+      padding:
+        12px;
+
+    }
+
+
+    .kpi small{
+
+      display:block;
+
+      color:
+        #75879a;
+
+      font-size:
+        8px;
+
+      font-weight:
+        1000;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        .3px;
+
+    }
+
+
+    .kpi strong{
+
+      display:block;
+
+      margin-top:
+        7px;
+
+      color:
+        var(--navy);
+
+      font-size:
+        21px;
+
+      font-weight:
+        1000;
+
+      word-break:
+        break-word;
+
+    }
+
+
+    .kpi.total{
+
+      border-color:
+        #b9d2ef;
+
+      background:
+        #f5f9ff;
+
+    }
+
+
+
+    /* =====================================================
+       TYPE SECTIONS
+       ===================================================== */
+
+    .type-section{
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:
+        13px;
+
+      overflow:hidden;
+
+      margin-bottom:
+        12px;
+
+      background:
+        #fff;
+
+    }
+
+
+    .type-head{
+
+      display:flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        12px;
+
+      padding:
+        12px 14px;
+
+      background:
+        #173f77;
+
+      color:#fff;
+
+    }
+
+
+    .type-head strong{
+
+      font-size:
+        14px;
+
+      font-weight:
+        1000;
+
+    }
+
+
+    .type-head span{
+
+      font-size:
+        15px;
+
+      font-weight:
+        1000;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .category-table{
+
+      width:100%;
+
+      border-collapse:
+        collapse;
+
+    }
+
+
+    .category-table th,
+    .category-table td{
+
+      padding:
+        10px 12px;
+
+      border-bottom:
+        1px solid
+        #edf1f5;
+
+      font-size:
+        10px;
+
+      text-align:left;
+
+    }
+
+
+    .category-table th{
+
+      color:
+        #6c8095;
+
+      background:
+        #f8fafc;
+
+      font-size:
+        8px;
+
+      font-weight:
+        1000;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        .25px;
+
+    }
+
+
+    .category-table th:last-child,
+    .category-table td:last-child{
+
+      text-align:right;
+
+    }
+
+
+    .category-table td.amount{
+
+      color:
+        var(--navy);
+
+      font-weight:
+        1000;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .category-table tr.total-row td{
+
+      background:
+        #f6f9fd;
+
+      color:
+        var(--navy);
+
+      font-weight:
+        1000;
+
+      border-bottom:0;
+
+    }
+
+
+    .empty-type{
+
+      padding:
+        22px 12px;
+
+      text-align:center;
+
+      color:
+        #8292a4;
+
+      font-size:
+        11px;
+
+    }
+
+
+
+    /* =====================================================
+       GRAND TOTAL
+       ===================================================== */
+
+    .grand-total{
+
+      display:flex;
+
+      justify-content:
+        space-between;
+
+      align-items:center;
+
+      gap:
+        15px;
+
+      border:
+        2px solid
+        #173f77;
+
+      border-radius:
+        13px;
+
+      padding:
+        15px;
+
+      background:
+        #eef5ff;
+
+      margin-bottom:
+        12px;
+
+    }
+
+
+    .grand-total span{
+
+      color:
+        var(--navy);
+
+      font-size:
+        15px;
+
+      font-weight:
+        1000;
+
+    }
+
+
+    .grand-total strong{
+
+      color:
+        var(--navy);
+
+      font-size:
+        27px;
+
+      font-weight:
+        1000;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+
+    /* =====================================================
+       DETAIL
+       ===================================================== */
+
+    .table-wrap{
+
+      overflow:auto;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:
+        11px;
+
+    }
+
+
+    .detail-table{
+
+      width:100%;
+
+      min-width:
+        1120px;
+
+      border-collapse:
+        collapse;
+
+    }
+
+
+    .detail-table th,
+    .detail-table td{
+
+      padding:
+        9px 8px;
+
+      border-bottom:
+        1px solid
+        #edf1f5;
+
+      text-align:left;
+
+      vertical-align:
+        top;
+
+      font-size:
+        9px;
+
+    }
+
+
+    .detail-table th{
+
+      position:sticky;
+
+      top:0;
+
+      background:
+        #173f77;
+
+      color:#fff;
+
+      font-size:
+        8px;
+
+      text-transform:
+        uppercase;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .expense-id{
+
+      color:
+        var(--blue);
+
+      font-weight:
+        1000;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .detail-amount{
+
+      color:
+        var(--navy);
+
+      font-weight:
+        1000;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .badge{
+
+      display:inline-block;
+
+      border-radius:
+        999px;
+
+      padding:
+        4px 7px;
+
+      font-size:
+        8px;
+
+      font-weight:
+        1000;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .badge.PAID{
+
+      background:
+        #edf8f2;
+
+      color:
+        #18864b;
+
+    }
+
+
+    .badge.UNPAID{
+
+      background:
+        #fff5df;
+
+      color:
+        #a86d00;
+
+    }
+
+
+    .badge.POSTED{
+
+      background:
+        #eaf4ff;
+
+      color:
+        #245fae;
+
+    }
+
+
+    .badge.PARTIAL{
+
+      background:
+        #fff5df;
+
+      color:
+        #a86d00;
+
+    }
+
+
+    .detail-empty{
+
+      padding:
+        28px 12px;
+
+      text-align:
+        center;
+
+      color:
+        #7b8c9f;
+
+      font-size:
+        11px;
+
+    }
+
+
+    .report-meta{
+
+      margin-top:
+        9px;
+
+      color:
+        #75879a;
+
+      font-size:
+        9px;
+
+      line-height:
+        1.5;
+
+    }
+
+
+    .error-box{
+
+      border:
+        1px solid
+        #edc0ba;
+
+      border-radius:
+        10px;
+
+      background:
+        #fff1ef;
+
+      color:
+        #b4382d;
+
+      padding:
+        10px;
+
+      margin-bottom:
+        12px;
+
+      font-size:
+        11px;
+
+      line-height:
+        1.5;
+
+    }
+
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media(
+      max-width:900px
+    ){
+
+      .toolbar{
+
+        grid-template-columns:
+          1fr 1fr;
+
+      }
+
+
+      .kpi-grid{
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0,1fr)
+          );
+
+      }
+
+    }
+
+
+    @media(
+      max-width:620px
+    ){
+
+      .app{
+        padding:9px;
+      }
+
+
+      .toolbar{
+        grid-template-columns:1fr;
+      }
+
+
+      .kpi-grid{
+        grid-template-columns:1fr;
+      }
+
+
+      .type-head,
+      .grand-total{
+
+        align-items:
+          flex-start;
+
+        flex-direction:
+          column;
+
+      }
+
+
+      input,
+      button{
+        font-size:16px;
+      }
+
+    }
+
+  </style>
+
+
+  <script
+    src="supabase-expenses-adapter.js?v=20260912-2"
+  ></script>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+  <!-- ====================================================
+       TOP
+       ==================================================== -->
+
+  <div class="topbar">
+
+    <div class="brand">
+
+      <h1>
+        📊 BIG BROTHER — Monthly Expense Report
+      </h1>
+
+      <p>
+        Expense Type → Monthly Category Total →
+        Expense Type Total → Total Monthly Expense
+      </p>
+
+    </div>
+
+
+    <div
+      class="status-pill"
+      id="dbStatus"
+    >
+      Preparing Report...
+    </div>
+
+  </div>
+
+
+
+  <!-- ====================================================
+       CONTROLS
+       ==================================================== -->
+
+  <div class="card">
+
+    <div class="card-title">
+      Report Period
+    </div>
+
+
+    <div class="toolbar">
+
+
+      <button
+        class="btn secondary"
+        type="button"
+        id="prevMonthBtn"
+      >
+        ← Previous
+      </button>
+
+
+      <div class="field">
+
+        <label for="reportMonth">
+          Month
+        </label>
+
+        <input
+          id="reportMonth"
+          type="month"
+        >
+
+      </div>
+
+
+      <button
+        class="btn secondary"
+        type="button"
+        id="nextMonthBtn"
+      >
+        Next →
+      </button>
+
+
+      <label class="check-wrap">
+
+        <input
+          id="showZeroCategories"
+          type="checkbox"
+        >
+
+        Show Zero Categories
+
+      </label>
+
+
+      <button
+        class="btn primary"
+        type="button"
+        id="refreshBtn"
+      >
+        ↻ Refresh
+      </button>
+
+
+    </div>
+
+  </div>
+
+
+
+  <div
+    class="error-box"
+    id="errorBox"
+    hidden
+  ></div>
+
+
+
+  <!-- ====================================================
+       KPI
+       ==================================================== -->
+
+  <div class="kpi-grid">
+
+    <div class="kpi">
+
+      <small>
+        Operating Expense
+      </small>
+
+      <strong id="operatingTotal">
+        $0.00
+      </strong>
+
+    </div>
+
+
+    <div class="kpi">
+
+      <small>
+        Non-Operating Expense
+      </small>
+
+      <strong id="nonOperatingTotal">
+        $0.00
+      </strong>
+
+    </div>
+
+
+    <div class="kpi">
+
+      <small>
+        Capital Expense
+      </small>
+
+      <strong id="capitalTotal">
+        $0.00
+      </strong>
+
+    </div>
+
+
+    <div class="kpi total">
+
+      <small>
+        Total Monthly Expense
+      </small>
+
+      <strong id="monthlyTotal">
+        $0.00
+      </strong>
+
+    </div>
+
+
+    <div class="kpi">
+
+      <small>
+        Expense Records
+      </small>
+
+      <strong id="recordCount">
+        0
+      </strong>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ====================================================
+       REPORT
+       ==================================================== -->
+
+  <div
+    id="reportSections"
+  ></div>
+
+
+  <div class="grand-total">
+
+    <span>
+      TOTAL MONTHLY EXPENSE
+    </span>
+
+    <strong id="grandTotal">
+      $0.00
+    </strong>
+
+  </div>
+
+
+
+  <!-- ====================================================
+       DETAIL
+       ==================================================== -->
+
+  <div class="card">
+
+    <div class="card-title">
+      Monthly Expense Detail
+    </div>
+
+
+    <div class="flow-note">
+      Detail records are based on
+      <strong>Expense Date</strong>.
+      Paid, Unpaid and Posted accounting expenses
+      are included in their expense month.
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table class="detail-table">
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Expense ID
+            </th>
+
+            <th>
+              Date
+            </th>
+
+            <th>
+              Type
+            </th>
+
+            <th>
+              Category
+            </th>
+
+            <th>
+              Description
+            </th>
+
+            <th>
+              Payee
+            </th>
+
+            <th>
+              Amount USD
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Payment Method
+            </th>
+
+            <th>
+              Reference
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="detailRows">
+
+          <tr>
+
+            <td
+              colspan="10"
+              class="detail-empty"
+            >
+              Loading Monthly Expense Report...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div
+      class="report-meta"
+      id="reportMeta"
+    ></div>
+
+  </div>
+
+
+</div>
+
+
+
+<script>
+
+(function(){
+
+  "use strict";
+
+
+  /* =======================================================
+     BASICS
+     ======================================================= */
+
+  var $ =
+    function(id){
+
+      return document
+        .getElementById(
+          id
+        );
+
+    };
+
+
+  var clean =
+    function(value){
+
+      return String(
+        value == null
+          ? ""
+          : value
+      ).trim();
+
+    };
+
+
+  var num =
+    function(value){
+
+      var n =
+        Number(
+          value
+        );
+
+      return Number.isFinite(
+        n
+      )
+        ? n
+        : 0;
+
+    };
+
+
+  function esc(
+    value
+  ){
+
+    return clean(
+      value
+    )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+  }
+
+
+
+  function money(
+    value
+  ){
+
+    return new Intl
+      .NumberFormat(
+
+        "en-US",
+
+        {
+
+          style:"currency",
+
+          currency:"USD",
+
+          minimumFractionDigits:2,
+
+          maximumFractionDigits:2
+
+        }
+
+      )
+      .format(
+        num(
+          value
+        )
+      );
+
+  }
+
+
+
+  function dateDisplay(
+    value
+  ){
+
+    var raw =
+      clean(
+        value
+      );
+
+
+    var match =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/
+      );
+
+
+    if(
+      !match
+    ){
+
+      return raw || "-";
+
+    }
+
+
+    return (
+
+      match[3]
+
+      +
+
+      "/"
+
+      +
+
+      match[2]
+
+      +
+
+      "/"
+
+      +
+
+      match[1]
+
+    );
+
+  }
+
+
+
+  function setStatus(
+    message,
+    type
+  ){
+
+    var pill =
+      $("dbStatus");
+
+
+    pill.textContent =
+      clean(
+        message
+      );
+
+
+    pill.classList.remove(
+      "loading",
+      "success",
+      "error"
+    );
+
+
+    if(
+      type
+    ){
+
+      pill.classList.add(
+        type
+      );
+
+    }
+
+  }
+
+
+
+  function setError(
+    message
+  ){
+
+    var box =
+      $("errorBox");
+
+
+    if(
+      !clean(
+        message
+      )
+    ){
+
+      box.hidden =
+        true;
+
+      box.textContent =
+        "";
+
+      return;
+
+    }
+
+
+    box.textContent =
+      clean(
+        message
+      );
+
+
+    box.hidden =
+      false;
+
+  }
+
+
+
+  /* =======================================================
+     EMBED MODE
+     ======================================================= */
+
+  var params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  if(
+    params.get(
+      "embed"
+    )
+    ===
+    "1"
+  ){
+
+    document.body
+      .classList
+      .add(
+        "embed"
+      );
+
+  }
+
+
+
+  /* =======================================================
+     MONTH
+     ======================================================= */
+
+  function currentPhnomPenhMonth(){
+
+    var parts =
+      new Intl.DateTimeFormat(
+
+        "en-US",
+
+        {
+
+          timeZone:
+            "Asia/Phnom_Penh",
+
+          year:
+            "numeric",
+
+          month:
+            "2-digit"
+
+        }
+
+      )
+      .formatToParts(
+        new Date()
+      );
+
+
+    var year = "";
+
+    var month = "";
+
+
+    parts.forEach(
+      function(part){
+
+        if(
+          part.type ===
+          "year"
+        ){
+
+          year =
+            part.value;
+
+        }
+
+
+        if(
+          part.type ===
+          "month"
+        ){
+
+          month =
+            part.value;
+
+        }
+
+      }
+    );
+
+
+    return (
+      year
+      +
+      "-"
+      +
+      month
+    );
+
+  }
+
+
+
+  function parseMonthValue(){
+
+    var raw =
+      clean(
+        $("reportMonth").value
+      );
+
+
+    var match =
+      raw.match(
+        /^(\d{4})-(\d{2})$/
+      );
+
+
+    if(
+      !match
+    ){
+
+      return null;
+
+    }
+
+
+    return {
+
+      year:
+        Number(
+          match[1]
+        ),
+
+      month:
+        Number(
+          match[2]
+        )
+
+    };
+
+  }
+
+
+
+  function shiftMonth(
+    offset
+  ){
+
+    var selected =
+      parseMonthValue();
+
+
+    if(
+      !selected
+    ){
+
+      return;
+
+    }
+
+
+    var date =
+      new Date(
+
+        selected.year,
+
+        selected.month - 1 + offset,
+
+        1
+
+      );
+
+
+    $("reportMonth").value =
+
+      date.getFullYear()
+
+      +
+
+      "-"
+
+      +
+
+      String(
+        date.getMonth() + 1
+      )
+      .padStart(
+        2,
+        "0"
+      );
+
+
+    loadReport();
+
+  }
+
+
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
+  function typeIcon(
+    expenseType
+  ){
+
+    switch(
+      clean(
+        expenseType
+      )
+    ){
+
+      case "OPERATING EXPENSE":
+        return "🏢";
+
+      case "NON-OPERATING EXPENSE":
+        return "📉";
+
+      case "CAPITAL EXPENSE":
+        return "🏗️";
+
+      default:
+        return "💸";
+
+    }
+
+  }
+
+
+
+  function renderSections(
+    sections
+  ){
+
+    var box =
+      $("reportSections");
+
+
+    var rows =
+      Array.isArray(
+        sections
+      )
+        ? sections
+        : [];
+
+
+    box.innerHTML =
+
+      rows
+      .map(
+        function(section){
+
+          var categories =
+            Array.isArray(
+              section.categories
+            )
+              ? section.categories
+              : [];
+
+
+          var categoryHtml =
+
+            categories.length
+
+              ?
+
+                (
+
+                  '<table class="category-table">'
+
+                  +
+
+                  "<thead>"
+
+                  +
+
+                  "<tr>"
+
+                  +
+
+                  "<th>Category</th>"
+
+                  +
+
+                  "<th>Records</th>"
+
+                  +
+
+                  "<th>Monthly Amount</th>"
+
+                  +
+
+                  "</tr>"
+
+                  +
+
+                  "</thead>"
+
+                  +
+
+                  "<tbody>"
+
+                  +
+
+                  categories
+                  .map(
+                    function(category){
+
+                      return (
+
+                        "<tr>"
+
+                        +
+
+                        "<td>"
+
+                        +
+
+                        esc(
+                          category.category
+                        )
+
+                        +
+
+                        "</td>"
+
+                        +
+
+                        "<td>"
+
+                        +
+
+                        esc(
+                          category.recordCount
+                        )
+
+                        +
+
+                        "</td>"
+
+                        +
+
+                        '<td class="amount">'
+
+                        +
+
+                        money(
+                          category.amountUSD
+                        )
+
+                        +
+
+                        "</td>"
+
+                        +
+
+                        "</tr>"
+
+                      );
+
+                    }
+                  )
+                  .join(
+                    ""
+                  )
+
+                  +
+
+                  '<tr class="total-row">'
+
+                  +
+
+                  "<td>"
+
+                  +
+
+                  "Total "
+
+                  +
+
+                  esc(
+                    section.expenseTypeLabel
+                  )
+
+                  +
+
+                  "</td>"
+
+                  +
+
+                  "<td>"
+
+                  +
+
+                  esc(
+                    section.recordCount
+                  )
+
+                  +
+
+                  "</td>"
+
+                  +
+
+                  '<td class="amount">'
+
+                  +
+
+                  money(
+                    section.totalAmountUSD
+                  )
+
+                  +
+
+                  "</td>"
+
+                  +
+
+                  "</tr>"
+
+                  +
+
+                  "</tbody>"
+
+                  +
+
+                  "</table>"
+
+                )
+
+              :
+
+                (
+
+                  '<div class="empty-type">'
+
+                  +
+
+                  "No expense activity for this type in the selected month."
+
+                  +
+
+                  "</div>"
+
+                );
+
+
+          return (
+
+            '<div class="type-section">'
+
+            +
+
+            '<div class="type-head">'
+
+            +
+
+            "<strong>"
+
+            +
+
+            typeIcon(
+              section.expenseType
+            )
+
+            +
+
+            " "
+
+            +
+
+            esc(
+              section.expenseTypeLabel
+            )
+
+            +
+
+            "</strong>"
+
+            +
+
+            "<span>"
+
+            +
+
+            money(
+              section.totalAmountUSD
+            )
+
+            +
+
+            "</span>"
+
+            +
+
+            "</div>"
+
+            +
+
+            categoryHtml
+
+            +
+
+            "</div>"
+
+          );
+
+        }
+      )
+      .join(
+        ""
+      );
+
+  }
+
+
+
+  function renderDetails(
+    records
+  ){
+
+    var body =
+      $("detailRows");
+
+
+    var rows =
+      Array.isArray(
+        records
+      )
+        ? records
+        : [];
+
+
+    if(
+      !rows.length
+    ){
+
+      body.innerHTML =
+
+        '<tr>'
+
+        +
+
+        '<td colspan="10" class="detail-empty">'
+
+        +
+
+        "No expense records for this month."
+
+        +
+
+        "</td>"
+
+        +
+
+        "</tr>";
+
+
+      return;
+
+    }
+
+
+    body.innerHTML =
+
+      rows
+      .map(
+        function(row){
+
+          var status =
+            clean(
+              row.status
+            )
+            .toUpperCase();
+
+
+          return (
+
+            "<tr>"
+
+            +
+
+            '<td class="expense-id">'
+
+            +
+
+            esc(
+              row.expenseId
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              dateDisplay(
+                row.expenseDate
+              )
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              row.expenseType
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              row.category
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              row.description || "-"
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              row.payee || "-"
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            '<td class="detail-amount">'
+
+            +
+
+            money(
+              row.amountUSD
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            '<span class="badge '
+
+            +
+
+            esc(
+              status
+            )
+
+            +
+
+            '">'
+
+            +
+
+            esc(
+              status || "-"
+            )
+
+            +
+
+            "</span>"
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              row.paymentMethod || "-"
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "<td>"
+
+            +
+
+            esc(
+              row.referenceNo || "-"
+            )
+
+            +
+
+            "</td>"
+
+            +
+
+            "</tr>"
+
+          );
+
+        }
+      )
+      .join(
+        ""
+      );
+
+  }
+
+
+
+  function renderReport(
+    report
+  ){
+
+    var totals =
+      report
+      &&
+      report.totals
+        ? report.totals
+        : {};
+
+
+    $("operatingTotal")
+      .textContent =
+        money(
+          totals.operatingExpenseUSD
+        );
+
+
+    $("nonOperatingTotal")
+      .textContent =
+        money(
+          totals.nonOperatingExpenseUSD
+        );
+
+
+    $("capitalTotal")
+      .textContent =
+        money(
+          totals.capitalExpenseUSD
+        );
+
+
+    $("monthlyTotal")
+      .textContent =
+        money(
+          totals.totalMonthlyExpenseUSD
+        );
+
+
+    $("grandTotal")
+      .textContent =
+        money(
+          totals.totalMonthlyExpenseUSD
+        );
+
+
+    $("recordCount")
+      .textContent =
+        String(
+          num(
+            totals.recordCount
+          )
+        );
+
+
+    renderSections(
+      report.sections
+    );
+
+
+    renderDetails(
+      report.records
+    );
+
+
+    var quality =
+      report
+      &&
+      report.dataQuality
+        ? report.dataQuality
+        : {};
+
+
+    $("reportMeta")
+      .textContent =
+
+        clean(
+          report.periodLabel
+        )
+
+        +
+
+        " · Generated "
+
+        +
+
+        clean(
+          report.generatedAt
+        )
+
+        +
+
+        " · "
+
+        +
+
+        String(
+          num(
+            totals.recordCount
+          )
+        )
+
+        +
+
+        " expense record(s)"
+
+        +
+
+        (
+
+          num(
+            quality.unclassifiedRecordCount
+          )
+          > 0
+
+            ? (
+                " · ⚠ " +
+                quality.unclassifiedRecordCount +
+                " unclassified record(s) worth " +
+                money(
+                  quality.unclassifiedAmountUSD
+                )
+              )
+
+            : " · Data Quality: OK"
+
+        );
+
+  }
+
+
+
+  /* =======================================================
+     LOAD
+     ======================================================= */
+
+  var loading =
+    false;
+
+
+  async function loadReport(){
+
+    if(
+      loading
+    ){
+
+      return;
+
+    }
+
+
+    var selected =
+      parseMonthValue();
+
+
+    if(
+      !selected
+    ){
+
+      setError(
+        "Please choose a valid report month."
+      );
+
+      return;
+
+    }
+
+
+    if(
+      !window.BBExpensesAdapter
+      ||
+      typeof window
+        .BBExpensesAdapter
+        .rpc
+        !==
+        "function"
+    ){
+
+      setError(
+        "Expenses Supabase Adapter is not available."
+      );
+
+      setStatus(
+        "Database Connection Error",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    loading =
+      true;
+
+
+    $("refreshBtn")
+      .disabled =
+        true;
+
+
+    $("prevMonthBtn")
+      .disabled =
+        true;
+
+
+    $("nextMonthBtn")
+      .disabled =
+        true;
+
+
+    setError(
+      ""
+    );
+
+
+    setStatus(
+      "Loading Monthly Expense...",
+      "loading"
+    );
+
+
+    try{
+
+
+      var report =
+
+        await window
+          .BBExpensesAdapter
+          .rpc(
+
+            "bb_expense_monthly_report",
+
+            {
+
+              p_year:
+                selected.year,
+
+              p_month:
+                selected.month,
+
+              p_include_zero_categories:
+                $("showZeroCategories")
+                  .checked
+
+            }
+
+          );
+
+
+      if(
+        !report
+        ||
+        report.success !==
+        true
+      ){
+
+        throw new Error(
+          "Monthly Expense Report returned an invalid response."
+        );
+
+      }
+
+
+      renderReport(
+        report
+      );
+
+
+      setStatus(
+        "Monthly Report Ready",
+        "success"
+      );
+
+
+    }catch(
+      error
+    ){
+
+
+      console.error(
+        error
+      );
+
+
+      var message =
+        clean(
+          error
+          &&
+          error.message
+            ? error.message
+            : error
+        );
+
+
+      setError(
+        message
+        ||
+        "Could not load Monthly Expense Report."
+      );
+
+
+      setStatus(
+        "Report Error",
+        "error"
+      );
+
+
+      $("reportSections")
+        .innerHTML =
+          "";
+
+
+      $("detailRows")
+        .innerHTML =
+
+          '<tr>'
+
+          +
+
+          '<td colspan="10" class="detail-empty">'
+
+          +
+
+          esc(
+            message
+            ||
+            "Could not load Monthly Expense Report."
+          )
+
+          +
+
+          "</td>"
+
+          +
+
+          "</tr>";
+
+
+    }finally{
+
+
+      loading =
+        false;
+
+
+      $("refreshBtn")
+        .disabled =
+          false;
+
+
+      $("prevMonthBtn")
+        .disabled =
+          false;
+
+
+      $("nextMonthBtn")
+        .disabled =
+          false;
+
+
+    }
+
+  }
+
+
+
+  /* =======================================================
+     EVENTS
+     ======================================================= */
+
+  $("prevMonthBtn")
+    .addEventListener(
+      "click",
+      function(){
+
+        shiftMonth(
+          -1
+        );
+
+      }
+    );
+
+
+  $("nextMonthBtn")
+    .addEventListener(
+      "click",
+      function(){
+
+        shiftMonth(
+          1
+        );
+
+      }
+    );
+
+
+  $("refreshBtn")
+    .addEventListener(
+      "click",
+      loadReport
+    );
+
+
+  $("reportMonth")
+    .addEventListener(
+      "change",
+      loadReport
+    );
+
+
+  $("showZeroCategories")
+    .addEventListener(
+      "change",
+      loadReport
+    );
+
+
+
+  /* =======================================================
+     START
+     ======================================================= */
+
+  $("reportMonth").value =
+    currentPhnomPenhMonth();
+
+
+  loadReport();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
