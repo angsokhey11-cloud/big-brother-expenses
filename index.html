@@ -10,11 +10,11 @@
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-google-v1.7.html?v=20260910-1',{cache:'no-store'});
+    const response=await fetch('legacy-google-v1.7.html?v=20260912-2',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Expenses source.');
     let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-expenses-adapter.js?v=20260910-1"></scr'+'ipt>';
+    const adapter='<scr'+'ipt src="supabase-expenses-adapter.js?v=20260912-2"></scr'+'ipt>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Expenses source is missing </head>.');
     html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
