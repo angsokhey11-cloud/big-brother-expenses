@@ -1,41 +1,1297 @@
 <!doctype html>
+
 <html lang="en">
+
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BIG BROTHER — Expenses Supabase</title>
-<style>html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-serif}.bb-loader{min-height:100vh;display:flex;align-items:center;justify-content:center}.bb-card{background:#fff;border:1px solid #d9e2ef;border-radius:14px;padding:22px 28px;box-shadow:0 8px 30px #173a6615;color:#17457a;font-weight:800}.bb-sub{margin-top:6px;color:#6b7280;font-size:12px;font-weight:600}</style>
+
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<title>
+  BIG BROTHER — Expenses Supabase
+</title>
+
+
+<style>
+
+html,
+body{
+  margin:0;
+  min-height:100%;
+  background:#eef3f8;
+  font-family:Arial,sans-serif;
+}
+
+.bb-loader{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bb-card{
+  background:#fff;
+  border:1px solid #d9e2ef;
+  border-radius:14px;
+  padding:22px 28px;
+  box-shadow:0 8px 30px #173a6615;
+  color:#17457a;
+  font-weight:800;
+}
+
+.bb-sub{
+  margin-top:6px;
+  color:#6b7280;
+  font-size:12px;
+  font-weight:600;
+}
+
+</style>
+
 </head>
+
+
 <body>
-<div class="bb-loader"><div class="bb-card">Loading BIG BROTHER Expenses…<div class="bb-sub">Secure Supabase database</div></div></div>
+
+
+<div class="bb-loader">
+
+  <div class="bb-card">
+
+    Loading BIG BROTHER Expenses…
+
+    <div class="bb-sub">
+      Secure Supabase database
+    </div>
+
+  </div>
+
+</div>
+
+
+
 <script>
+
 (async function(){
+
+  "use strict";
+
+
   try{
-    const response=await fetch('legacy-google-v1.7.html?v=20260912-2',{cache:'no-store'});
-    if(!response.ok)throw new Error('Could not load Expenses source.');
-    let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-expenses-adapter.js?v=20260912-2"></scr'+'ipt>';
-    const headClose=html.toLowerCase().indexOf('</head>');
-    if(headClose<0)throw new Error('Expenses source is missing </head>.');
-    html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
 
-    const marker='  initialize();\n\n})();';
-    const replacement=`  // SUPABASE CUTOVER\n  jsonp = window.BBExpensesAdapter.jsonp;\n  expenseApiPostAction = window.BBExpensesAdapter.postAction;\n  expenseApiPost = function(payload,timeout){\n    return expenseApiPostAction('createExpense',payload,timeout);\n  };\n\n  initialize();\n\n})();`;
-    if(!html.includes(marker))throw new Error('Expenses initialization marker was not found.');
-    html=html.replace(marker,replacement);
+    /* =====================================================
+       1. LOAD EXISTING EXPENSE SYSTEM
+       ===================================================== */
 
-    html=html.replace('<title>BIG BROTHER — Expenses V1.7</title>','<title>BIG BROTHER — Expenses Supabase</title>');
-    html=html.replaceAll('Expenses Database','Supabase Expenses Database');
-    html=html.replaceAll('Preparing Supabase Expenses Database...','Preparing Supabase…');
+    const response =
+      await fetch(
+        "legacy-google-v1.7.html?v=20260912-3",
+        {
+          cache:"no-store"
+        }
+      );
+
+
+    if(
+      !response.ok
+    ){
+      throw new Error(
+        "Could not load Expenses source."
+      );
+    }
+
+
+    let html =
+      await response.text();
+
+
+
+    /* =====================================================
+       HELPER
+       ===================================================== */
+
+    function mustReplace(
+      label,
+      oldText,
+      newText
+    ){
+
+      if(
+        !html.includes(
+          oldText
+        )
+      ){
+        throw new Error(
+          label +
+          " marker was not found."
+        );
+      }
+
+
+      html =
+        html.replace(
+          oldText,
+          newText
+        );
+
+    }
+
+
+
+    /* =====================================================
+       2. LOAD SUPABASE ADAPTER
+       ===================================================== */
+
+    const adapter =
+      '<scr' +
+      'ipt src="supabase-expenses-adapter.js?v=20260912-3"></scr' +
+      'ipt>';
+
+
+    const headClose =
+      html
+        .toLowerCase()
+        .indexOf(
+          "</head>"
+        );
+
+
+    if(
+      headClose < 0
+    ){
+      throw new Error(
+        "Expenses source is missing </head>."
+      );
+    }
+
+
+    html =
+      html.slice(
+        0,
+        headClose
+      )
+      +
+      adapter
+      +
+      "\n"
+      +
+      html.slice(
+        headClose
+      );
+
+
+
+    /* =====================================================
+       3. REPLACE OLD CATEGORY UI
+       ===================================================== */
+
+    const oldCategoryBlock =
+`        <div class="field">
+          <label for="category">Expense Category</label>
+          <select id="category" required>
+            <option value="">Loading Categories...</option>
+          </select>
+
+          <div class="other-category" id="otherCategoryWrap" hidden>
+            <label for="otherCategory">Custom Category</label>
+            <input id="otherCategory" type="text" autocomplete="off" placeholder="Enter expense category">
+          </div>
+        </div>`;
+
+
+    const newCategoryBlock =
+`        <div class="field">
+
+          <label for="category">
+            Expense Category
+          </label>
+
+          <div class="payee-input-row">
+
+            <select
+              id="category"
+              required
+            >
+              <option value="">
+                Select Expense Category
+              </option>
+            </select>
+
+            <button
+              class="payee-add-btn"
+              type="button"
+              id="addCategoryBtn"
+            >
+              + New Category
+            </button>
+
+          </div>
+
+          <!-- Old draft compatibility only -->
+          <input
+            id="otherCategory"
+            type="hidden"
+          >
+
+          <div
+            id="categoryHelp"
+            style="
+              margin-top:6px;
+              color:#6d7f93;
+              font-size:9px;
+              line-height:1.4;
+            "
+          >
+            Categories are based on the selected Expense Type.
+          </div>
+
+        </div>`;
+
+
+    mustReplace(
+      "Expense Category UI",
+      oldCategoryBlock,
+      newCategoryBlock
+    );
+
+
+
+    /* =====================================================
+       4. TYPE -> CATEGORY FILTERING
+       ===================================================== */
+
+    const oldCategoryFunctions =
+`  function setExpenseType(value){
+    $("expenseType").value = value;
+
+    document.querySelectorAll(".type-btn").forEach(function(button){
+      button.classList.toggle(
+        "active",
+        button.dataset.type === value
+      );
+    });
+  }
+
+  function fillCategories(categories){
+    var select = $("category");
+    select.innerHTML = '<option value="">Select Expense Category</option>';
+
+    (categories || []).forEach(function(category){
+      var option = document.createElement("option");
+      option.value = category.category;
+      option.textContent = category.category;
+      select.appendChild(option);
+    });
+  }`;
+
+
+    const newCategoryFunctions =
+`  function setExpenseType(value){
+
+    var nextType =
+      clean(value)
+        .toUpperCase();
+
+
+    $("expenseType").value =
+      nextType;
+
+
+    document
+      .querySelectorAll(".type-btn")
+      .forEach(function(button){
+
+        button.classList.toggle(
+          "active",
+          button.dataset.type === nextType
+        );
+
+      });
+
+
+    if(
+      bootstrap &&
+      Array.isArray(
+        bootstrap.categories
+      )
+    ){
+
+      fillCategories(
+        bootstrap.categories
+      );
+
+    }
+
+  }
+
+
+  function fillCategories(categories){
+
+    var select =
+      $("category");
+
+
+    var expenseType =
+      clean(
+        $("expenseType").value
+      )
+      .toUpperCase();
+
+
+    var currentValue =
+      clean(
+        select.value
+      );
+
+
+    select.innerHTML =
+      '<option value="">Select Expense Category</option>';
+
+
+    var filtered =
+      (
+        Array.isArray(categories)
+          ? categories
+          : []
+      )
+      .filter(function(category){
+
+        return (
+          category.active !== false
+          &&
+          clean(
+            category.expenseType
+          )
+          .toUpperCase()
+          ===
+          expenseType
+        );
+
+      });
+
+
+    filtered.forEach(function(category){
+
+      var option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        category.category;
+
+
+      option.textContent =
+        category.category;
+
+
+      select.appendChild(
+        option
+      );
+
+    });
+
+
+    var stillExists =
+      Array
+        .from(
+          select.options
+        )
+        .some(function(option){
+
+          return (
+            option.value ===
+            currentValue
+          );
+
+        });
+
+
+    if(
+      stillExists
+    ){
+
+      select.value =
+        currentValue;
+
+    }else{
+
+      select.value =
+        "";
+
+    }
+
+
+    if(
+      $("categoryHelp")
+    ){
+
+      $("categoryHelp").textContent =
+        filtered.length
+        +
+        " active "
+        +
+        (
+          filtered.length === 1
+            ? "category"
+            : "categories"
+        )
+        +
+        " under "
+        +
+        expenseType
+        +
+        ".";
+
+    }
+
+
+    handleCategoryChange();
+
+  }`;
+
+
+    mustReplace(
+      "Expense Category filtering functions",
+      oldCategoryFunctions,
+      newCategoryFunctions
+    );
+
+
+
+    /* =====================================================
+       5. REMOVE OLD "OTHER = CUSTOM CATEGORY" LOGIC
+       ===================================================== */
+
+    const oldOtherFunctions =
+`  function handleCategoryChange(){
+    var isOther = $("category").value === "Other";
+    $("otherCategoryWrap").hidden = !isOther;
+
+    if(isOther){
+      setTimeout(function(){
+        $("otherCategory").focus();
+      },20);
+    }else{
+      $("otherCategory").value = "";
+    }
+  }
+
+  function getCategoryValue(){
+    if($("category").value === "Other"){
+      return clean($("otherCategory").value);
+    }
+
+    return clean($("category").value);
+  }`;
+
+
+    const newOtherFunctions =
+`  function handleCategoryChange(){
+
+    $("otherCategory").value =
+      "";
+
+  }
+
+
+  function getCategoryValue(){
+
+    return clean(
+      $("category").value
+    );
+
+  }`;
+
+
+    mustReplace(
+      "Old Custom Category logic",
+      oldOtherFunctions,
+      newOtherFunctions
+    );
+
+
+
+    /* =====================================================
+       6. ADD NEW CATEGORY MODAL
+       ===================================================== */
+
+    const payeeModalMarker =
+      '<div class="payee-modal-overlay" id="payeeModalOverlay" hidden>';
+
+
+    const categoryModal =
+`
+<!-- ======================================================
+     NEW EXPENSE CATEGORY
+     ====================================================== -->
+
+<div
+  class="payee-modal-overlay"
+  id="categoryModalOverlay"
+  hidden
+>
+
+  <div class="payee-modal">
+
+
+    <div class="payee-modal-head">
+
+      <h2>
+        ➕ Add Expense Category
+      </h2>
+
+      <button
+        class="detail-close"
+        type="button"
+        id="categoryModalCloseBtn"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <div class="payee-modal-body">
+
+
+      <div class="grid-2">
+
+
+        <div class="field">
+
+          <label for="newCategoryType">
+            Expense Type
+          </label>
+
+          <input
+            id="newCategoryType"
+            type="text"
+            disabled
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="newCategoryName">
+            Category Name
+          </label>
+
+          <input
+            id="newCategoryName"
+            type="text"
+            autocomplete="off"
+            placeholder="Example: Security Expense"
+          >
+
+        </div>
+
+
+      </div>
+
+
+      <div
+        class="accrued-status-message"
+        id="newCategoryMessage"
+      ></div>
+
+
+      <div class="actions">
+
+        <button
+          class="btn secondary"
+          type="button"
+          id="categoryModalCancelBtn"
+        >
+          Cancel
+        </button>
+
+
+        <button
+          class="btn primary"
+          type="button"
+          id="saveCategoryBtn"
+        >
+          Save Category
+        </button>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</div>
+
+
+`;
+
+
+    if(
+      !html.includes(
+        payeeModalMarker
+      )
+    ){
+      throw new Error(
+        "Payee modal marker was not found."
+      );
+    }
+
+
+    html =
+      html.replace(
+        payeeModalMarker,
+        categoryModal +
+        payeeModalMarker
+      );
+
+
+
+    /* =====================================================
+       7. ADD CATEGORY CREATE FUNCTIONS
+       ===================================================== */
+
+    const openPayeeMarker =
+      '  function openPayeeModal(){';
+
+
+    const categoryCreateFunctions =
+`  /* =========================================================
+     EXPENSE CATEGORY CREATE
+     ========================================================= */
+
+  function openCategoryModal(){
+
+    var expenseType =
+      clean(
+        $("expenseType").value
+      );
+
+
+    if(
+      !expenseType
+    ){
+      return;
+    }
+
+
+    $("newCategoryType").value =
+      expenseType;
+
+
+    $("newCategoryName").value =
+      "";
+
+
+    $("newCategoryMessage").textContent =
+      "";
+
+
+    $("newCategoryMessage")
+      .classList
+      .remove(
+        "error"
+      );
+
+
+    $("categoryModalOverlay").hidden =
+      false;
+
+
+    setTimeout(function(){
+
+      $("newCategoryName")
+        .focus();
+
+    },30);
+
+  }
+
+
+
+  function closeCategoryModal(){
+
+    $("categoryModalOverlay").hidden =
+      true;
+
+  }
+
+
+
+  function setNewCategoryMessage(
+    message,
+    error
+  ){
+
+    $("newCategoryMessage").textContent =
+      clean(
+        message
+      );
+
+
+    $("newCategoryMessage")
+      .classList
+      .toggle(
+        "error",
+        !!error
+      );
+
+  }
+
+
+
+  function saveNewCategory(){
+
+    var categoryName =
+      clean(
+        $("newCategoryName").value
+      );
+
+
+    var expenseType =
+      clean(
+        $("expenseType").value
+      );
+
+
+    if(
+      !expenseType
+    ){
+
+      setNewCategoryMessage(
+        "Expense Type is required.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    if(
+      !categoryName
+    ){
+
+      setNewCategoryMessage(
+        "Category Name is required.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    var button =
+      $("saveCategoryBtn");
+
+
+    var oldText =
+      button.textContent;
+
+
+    button.disabled =
+      true;
+
+
+    button.textContent =
+      "Saving...";
+
+
+    setNewCategoryMessage(
+      "Saving Expense Category...",
+      false
+    );
+
+
+    expenseApiPostAction(
+
+      "createExpenseCategory",
+
+      {
+
+        categoryName:
+          categoryName,
+
+        expenseType:
+          expenseType
+
+      }
+
+    )
+    .then(function(result){
+
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        oldText;
+
+
+      if(
+        !result ||
+        !result.success ||
+        !result.category
+      ){
+
+        setNewCategoryMessage(
+
+          result &&
+          result.error
+            ? result.error
+            : "Could not save Expense Category.",
+
+          true
+
+        );
+
+        return;
+
+      }
+
+
+      var category =
+        result.category;
+
+
+      if(
+        !bootstrap
+      ){
+
+        bootstrap = {};
+
+      }
+
+
+      if(
+        !Array.isArray(
+          bootstrap.categories
+        )
+      ){
+
+        bootstrap.categories =
+          [];
+
+      }
+
+
+      bootstrap.categories =
+        bootstrap.categories
+        .filter(function(item){
+
+          return (
+
+            clean(
+              item.categoryId
+            )
+            !==
+            clean(
+              category.categoryId
+            )
+
+            &&
+
+            clean(
+              item.category
+            )
+            .toLowerCase()
+            !==
+            clean(
+              category.category
+            )
+            .toLowerCase()
+
+          );
+
+        });
+
+
+      bootstrap.categories.push(
+        category
+      );
+
+
+      if(
+        result.revision !==
+        undefined
+      ){
+
+        expenseRevision =
+          clean(
+            result.revision
+          )
+          ||
+          expenseRevision
+          ||
+          "0";
+
+      }
+
+
+      fillCategories(
+        bootstrap.categories
+      );
+
+
+      $("category").value =
+        clean(
+          category.category
+        );
+
+
+      handleCategoryChange();
+
+
+      saveSmartCache();
+
+      saveAddDraft();
+
+
+      setNewCategoryMessage(
+
+        result.reactivated
+          ? "Category reactivated successfully."
+          : "Category created successfully.",
+
+        false
+
+      );
+
+
+      setTimeout(function(){
+
+        closeCategoryModal();
+
+      },350);
+
+
+      scheduleSilentSync();
+
+    })
+    .catch(function(error){
+
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        oldText;
+
+
+      setNewCategoryMessage(
+
+        error &&
+        error.message
+          ? error.message
+          : "Could not save Expense Category.",
+
+        true
+
+      );
+
+    });
+
+  }
+
+
+
+`;
+
+
+    if(
+      !html.includes(
+        openPayeeMarker
+      )
+    ){
+      throw new Error(
+        "Payee function marker was not found."
+      );
+    }
+
+
+    html =
+      html.replace(
+        openPayeeMarker,
+        categoryCreateFunctions +
+        openPayeeMarker
+      );
+
+
+
+    /* =====================================================
+       8. ADD CATEGORY BUTTON EVENTS
+       ===================================================== */
+
+    const categoryChangeMarker =
+      '  $("category").addEventListener("change",handleCategoryChange);';
+
+
+    const categoryEvents =
+`  $("category").addEventListener("change",handleCategoryChange);
+
+
+  $("addCategoryBtn")
+    .addEventListener(
+      "click",
+      openCategoryModal
+    );
+
+
+  $("categoryModalCloseBtn")
+    .addEventListener(
+      "click",
+      closeCategoryModal
+    );
+
+
+  $("categoryModalCancelBtn")
+    .addEventListener(
+      "click",
+      closeCategoryModal
+    );
+
+
+  $("saveCategoryBtn")
+    .addEventListener(
+      "click",
+      saveNewCategory
+    );
+
+
+  $("categoryModalOverlay")
+    .addEventListener(
+      "click",
+      function(event){
+
+        if(
+          event.target ===
+          $("categoryModalOverlay")
+        ){
+
+          closeCategoryModal();
+
+        }
+
+      }
+    );
+
+
+  $("newCategoryName")
+    .addEventListener(
+      "keydown",
+      function(event){
+
+        if(
+          event.key ===
+          "Enter"
+        ){
+
+          event.preventDefault();
+
+          saveNewCategory();
+
+        }
+
+      }
+    );`;
+
+
+    mustReplace(
+      "Category event listener",
+      categoryChangeMarker,
+      categoryEvents
+    );
+
+
+
+    /* =====================================================
+       9. ESC KEY CLOSES CATEGORY MODAL TOO
+       ===================================================== */
+
+    const oldEscapeHandler =
+`  document.addEventListener("keydown",function(event){
+    if(event.key === "Escape"){
+      closeExpenseDetail();
+      closeExpensePaymentModal();
+      closePayeeModal();
+      closeBatchPaymentModal();
+    }
+  });`;
+
+
+    const newEscapeHandler =
+`  document.addEventListener("keydown",function(event){
+    if(event.key === "Escape"){
+      closeExpenseDetail();
+      closeExpensePaymentModal();
+      closePayeeModal();
+      closeCategoryModal();
+      closeBatchPaymentModal();
+    }
+  });`;
+
+
+    mustReplace(
+      "Escape modal handler",
+      oldEscapeHandler,
+      newEscapeHandler
+    );
+
+
+
+    /* =====================================================
+       10. SUPABASE CUTOVER
+       ===================================================== */
+
+    const initMarker =
+      '  initialize();\n\n})();';
+
+
+    const initReplacement =
+`  // ======================================================
+  // SUPABASE CUTOVER
+  // ======================================================
+
+  jsonp =
+    window.BBExpensesAdapter.jsonp;
+
+
+  expenseApiPostAction =
+    window.BBExpensesAdapter.postAction;
+
+
+  expenseApiPost =
+    function(
+      payload,
+      timeout
+    ){
+
+      return expenseApiPostAction(
+        "createExpense",
+        payload,
+        timeout
+      );
+
+    };
+
+
+  initialize();
+
+})();`;
+
+
+    mustReplace(
+      "Expenses initialization",
+      initMarker,
+      initReplacement
+    );
+
+
+
+    /* =====================================================
+       11. DISPLAY NAME CLEANUP
+       ===================================================== */
+
+    html =
+      html.replace(
+        "<title>BIG BROTHER — Expenses V1.7</title>",
+        "<title>BIG BROTHER — Expenses Supabase</title>"
+      );
+
+
+    html =
+      html.replaceAll(
+        "Expenses Database",
+        "Supabase Expenses Database"
+      );
+
+
+    html =
+      html.replaceAll(
+        "Preparing Supabase Expenses Database...",
+        "Preparing Supabase…"
+      );
+
+
+
+    /* =====================================================
+       12. OPEN FINAL APP
+       ===================================================== */
 
     document.open();
-    document.write(html);
+
+    document.write(
+      html
+    );
+
     document.close();
+
+
   }catch(error){
-    console.error(error);
-    document.body.innerHTML='<div class="bb-loader"><div class="bb-card">Could not open Expenses<div class="bb-sub">'+String(error?.message||error)+'</div></div></div>';
+
+
+    console.error(
+      error
+    );
+
+
+    document.body.innerHTML =
+
+      '<div class="bb-loader">'
+
+      +
+
+      '<div class="bb-card">'
+
+      +
+
+      'Could not open Expenses'
+
+      +
+
+      '<div class="bb-sub">'
+
+      +
+
+      String(
+        error &&
+        error.message
+          ? error.message
+          : error
+      )
+
+      +
+
+      '</div>'
+
+      +
+
+      '</div>'
+
+      +
+
+      '</div>';
+
   }
+
+
 })();
+
 </script>
+
+
 </body>
+
 </html>
