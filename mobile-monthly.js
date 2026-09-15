@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Expense Mobile V2.1 */
+/* BIG BROTHER — Monthly Expense Mobile V2.2 */
 (function(){
   'use strict';
 
@@ -24,7 +24,7 @@
       .replace(/&/g,'&amp;')
       .replace(/</g,'&lt;')
       .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
+      .replace(/\"/g,'&quot;')
       .replace(/'/g,'&#039;');
   }
 
@@ -116,16 +116,12 @@
     const status=clean(row.status).toUpperCase() || '-';
     return [
       '<tr>',
-        '<td class="expense-id">',esc(row.expenseId || '-'),'</td>',
-        '<td>',esc(dateDisplay(row.expenseDate)),'</td>',
-        '<td>',esc(row.expenseType || '-'),'</td>',
-        '<td>',esc(row.category || '-'),'</td>',
-        '<td class="description-cell">',esc(row.description || '-'),'</td>',
-        '<td>',esc(row.payee || '-'),'</td>',
+        '<td class="date-cell">',esc(dateDisplay(row.expenseDate)),'</td>',
+        '<td class="description-cell" title="',esc(row.description || '-'),'">',esc(row.description || '-'),'</td>',
+        '<td class="category-cell" title="',esc(row.category || '-'),'">',esc(row.category || '-'),'</td>',
         '<td class="amount-cell">',money(row.amountUSD),'</td>',
-        '<td><span class="status ',statusClass(status),'">',esc(status),'</span></td>',
-        '<td>',esc(row.paymentMethod || '-'),'</td>',
-        '<td>',esc(row.referenceNo || '-'),'</td>',
+        '<td class="status-cell"><span class="status ',statusClass(status),'">',esc(status),'</span></td>',
+        '<td class="payment-cell" title="',esc(row.paymentMethod || '-'),'">',esc(row.paymentMethod || '-'),'</td>',
       '</tr>'
     ].join('');
   }
@@ -143,17 +139,21 @@
       ? [
           '<div class="transaction-table-wrap">',
             '<table class="transaction-table">',
+              '<colgroup>',
+                '<col class="col-date">',
+                '<col class="col-description">',
+                '<col class="col-category">',
+                '<col class="col-amount">',
+                '<col class="col-status">',
+                '<col class="col-payment">',
+              '</colgroup>',
               '<thead><tr>',
-                '<th>Expense ID</th>',
                 '<th>Date</th>',
-                '<th>Type</th>',
-                '<th>Category</th>',
                 '<th>Description</th>',
-                '<th>Payee</th>',
-                '<th>Amount USD</th>',
+                '<th>Category</th>',
+                '<th>Amount</th>',
                 '<th>Status</th>',
-                '<th>Payment Method</th>',
-                '<th>Reference</th>',
+                '<th>Payment</th>',
               '</tr></thead>',
               '<tbody>',rows.map(renderTransaction).join(''),'</tbody>',
             '</table>',
