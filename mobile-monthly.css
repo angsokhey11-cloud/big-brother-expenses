@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Expense Mobile V2 */
+/* BIG BROTHER — Monthly Expense Mobile V2.1 */
 :root{
   --navy:#173f77;
   --blue:#245fae;
@@ -71,25 +71,23 @@ button:disabled,input:disabled{opacity:.55}
 
 .sheet-overlay{position:fixed;inset:0;z-index:11000;display:flex;align-items:flex-end;background:rgba(11,25,44,.58)}
 .sheet-overlay[hidden]{display:none!important}
-.sheet{width:100%;max-height:92dvh;overflow:auto;border-radius:18px 18px 0 0;background:var(--bg);box-shadow:0 -18px 50px rgba(0,0,0,.22)}
-.sheet-head{position:sticky;top:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-bottom:1px solid var(--line);background:#fff}
+.sheet{width:100%;max-height:92dvh;overflow:hidden;border-radius:18px 18px 0 0;background:var(--bg);box-shadow:0 -18px 50px rgba(0,0,0,.22)}
+.sheet-head{position:relative;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:#fff}
 .sheet-head>div{min-width:0}
 .sheet-head strong{display:block;color:var(--navy);font-size:15px;line-height:1.15}
 .sheet-head span{display:block;margin-top:3px;color:var(--muted);font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sheet-head button{flex:0 0 auto;width:36px;height:36px;border:0;border-radius:50%;background:#eef3f8;color:var(--navy);font-size:18px;font-weight:900}
-.transaction-list{display:grid;gap:6px;padding:7px 7px calc(10px + env(safe-area-inset-bottom))}
-.transaction-card{padding:8px 9px;border:1px solid var(--line);border-radius:10px;background:#fff}
-.transaction-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start}
-.transaction-top strong{display:block;color:var(--navy);font-size:14px;line-height:1.1}
-.transaction-top small{display:block;margin-top:3px;color:var(--muted);font-size:7px;font-weight:800}
-.transaction-id{margin-top:6px;color:var(--blue);font-size:8px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.transaction-desc{margin-top:6px;padding:6px 7px;border-radius:7px;background:#f7f9fc;color:#294965;font-size:8px;line-height:1.35}
-.transaction-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
-.transaction-grid>div{min-width:0;padding:5px 6px;border:1px solid #edf1f5;border-radius:7px;background:#fbfcfe}
-.transaction-grid>div.full{grid-column:1/-1}
-.transaction-grid small{display:block;color:#7b8da0;font-size:6px;font-weight:900;text-transform:uppercase}
-.transaction-grid b{display:block;margin-top:2px;color:#294965;font-size:8px;word-break:break-word}
-.status{display:inline-block;border-radius:999px;padding:4px 7px;font-size:7px;font-weight:1000;white-space:nowrap}
+.sheet-head button{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:50%;background:#eef3f8;color:var(--navy);font-size:17px;font-weight:900}
+.transaction-list{display:block;max-height:calc(92dvh - 62px);overflow:auto;padding:7px 7px calc(10px + env(safe-area-inset-bottom))}
+.transaction-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;-webkit-overflow-scrolling:touch}
+.transaction-table{width:100%;min-width:980px;border-collapse:collapse;background:#fff}
+.transaction-table th,.transaction-table td{height:34px;padding:6px 8px;border-bottom:1px solid #edf1f5;text-align:left;vertical-align:middle;font-size:8px;white-space:nowrap}
+.transaction-table th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-size:7px;font-weight:1000;text-transform:uppercase;letter-spacing:.15px}
+.transaction-table tbody tr:last-child td{border-bottom:0}
+.transaction-table tbody tr:hover{background:#f8fbff}
+.transaction-table .expense-id{color:var(--blue);font-weight:1000}
+.transaction-table .description-cell{max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.transaction-table .amount-cell{color:var(--navy);font-weight:1000;text-align:right}
+.status{display:inline-block;border-radius:999px;padding:3px 6px;font-size:7px;font-weight:1000;white-space:nowrap}
 .status.PAID{background:#edf8f2;color:var(--green)}
 .status.UNPAID,.status.PARTIAL{background:#fff5df;color:var(--orange)}
 .status.POSTED{background:#eaf4ff;color:var(--blue)}
@@ -100,6 +98,6 @@ button:disabled,input:disabled{opacity:.55}
   .period-card{grid-template-columns:36px minmax(0,1fr) 36px 36px}
   .category-row{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:7px}
   .view-btn{padding:5px 6px}
-  .transaction-grid{grid-template-columns:1fr}
-  .transaction-grid>div.full{grid-column:auto}
+  .transaction-table{min-width:920px}
+  .transaction-table th,.transaction-table td{height:32px;padding:5px 7px;font-size:7px}
 }
