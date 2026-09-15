@@ -4,67 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BIG BROTHER — Expense Recorder Mobile</title>
-<link rel="stylesheet" href="mobile-expense.css?v=20260915-1">
+<link rel="stylesheet" href="mobile-expense.css?v=20260916-1">
 </head>
 <body>
-<div id="boot" class="boot"><div class="boot-card">Loading Expense Recorder…<div>Mobile · Secure Supabase</div></div></div>
+<div id="boot" class="boot">
+  <div id="bootCard" class="boot-card">
+    Loading Expense Recorder…
+    <div>Mobile · Live BIG BROTHER Expenses Engine</div>
+  </div>
+</div>
 
-<main id="app" class="app" hidden>
-  <header class="mobile-head">
-    <div><h1>Expense Recorder</h1><p>Paid → Expense History · Unpaid → Accrued Expenses</p></div>
-    <span>SECURE</span>
-  </header>
+<iframe
+  id="expenseFrame"
+  title="BIG BROTHER Expense Recorder"
+  allow="clipboard-read; clipboard-write"
+></iframe>
 
-  <form id="expenseForm" novalidate>
-    <section class="card">
-      <div class="row two">
-        <label class="field"><b>Expense Date</b><input id="expenseDate" type="date" required></label>
-        <div class="field"><b>Expense Type</b><div id="typeButtons" class="seg three">
-          <button type="button" data-type="OPERATING EXPENSE" class="active">Operating</button>
-          <button type="button" data-type="NON-OPERATING EXPENSE">Non-Operating</button>
-          <button type="button" data-type="CAPITAL EXPENSE">Capital</button>
-        </div></div>
-      </div>
-
-      <div class="field"><b>Expense Category</b><div class="with-action"><select id="category" required><option value="">Select Expense Category</option></select><button type="button" id="newCategoryBtn">+ New</button></div><small id="categoryHelp"></small></div>
-
-      <div class="field payee-field"><b>Payee / Paid To</b><div class="with-action"><input id="payeeSearch" type="text" autocomplete="off" placeholder="Search saved Payee"><button type="button" id="newPayeeBtn">+ New</button></div><div id="payeeSuggestions" class="suggestions" hidden></div><small id="payeeSelected"></small></div>
-
-      <label class="field"><b>Description</b><input id="description" type="text" autocomplete="off" placeholder="What was this expense for?" required></label>
-    </section>
-
-    <section class="card">
-      <div class="field"><b>Payment Status</b><div id="statusButtons" class="seg two"><button type="button" data-status="PAID" class="active">✅ Paid</button><button type="button" data-status="UNPAID">⏳ Unpaid</button></div><small id="paymentHelp">Paid expense will be saved directly into Expense History.</small></div>
-
-      <div class="amount-card">
-        <div id="currencyButtons" class="seg two"><button type="button" data-currency="USD" class="active">USD</button><button type="button" data-currency="KHR">KHR</button></div>
-        <div class="amount-line"><span id="amountSymbol">$</span><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></div>
-        <div class="rate-line"><span>1 USD = KHR</span><input id="exchangeRate" type="number" min="1" step="1" inputmode="decimal"><strong id="convertedAmount">$0.00 USD</strong></div>
-      </div>
-
-      <div class="row two payment-row">
-        <label class="field" id="paymentMethodWrap"><b>Payment Method</b><select id="paymentMethod"><option value="">Select Payment Method</option></select></label>
-        <label class="field" id="dueDateWrap" hidden><b>Due Date</b><input id="dueDate" type="date"></label>
-        <label class="field"><b>Reference / Receipt No.</b><input id="referenceNo" type="text" autocomplete="off" placeholder="Optional"></label>
-      </div>
-
-      <details class="note-details"><summary>📝 Note <span>Optional</span></summary><textarea id="note" placeholder="Additional expense note"></textarea></details>
-    </section>
-
-    <div id="status" class="status"></div>
-
-    <section id="successCard" class="success-card" hidden>
-      <strong>✅ Expense Saved</strong><div id="successId"></div><div class="success-grid"><span id="successType"></span><span id="successCategory"></span><span id="successAmount"></span><span id="successStatus"></span></div><button type="button" id="addAnotherBtn">+ Add Another Expense</button>
-    </section>
-
-    <div class="sticky-actions"><button type="button" id="clearBtn">Clear</button><button type="submit" id="saveBtn">✓ Save Expense</button></div>
-  </form>
-</main>
-
-<div id="categorySheet" class="sheet-wrap" hidden><div class="sheet"><div class="sheet-head"><strong>Add Expense Category</strong><button type="button" data-close="categorySheet">×</button></div><label class="field"><b>Expense Type</b><input id="newCategoryType" disabled></label><label class="field"><b>Category Name</b><input id="newCategoryName" type="text" autocomplete="off" placeholder="Example: Security Expense"></label><div id="categoryMessage" class="sheet-message"></div><div class="sheet-actions"><button type="button" data-close="categorySheet">Cancel</button><button type="button" id="saveCategoryBtn">Save Category</button></div></div></div>
-
-<div id="payeeSheet" class="sheet-wrap" hidden><div class="sheet"><div class="sheet-head"><strong>Add Expense Payee</strong><button type="button" data-close="payeeSheet">×</button></div><div class="row two"><label class="field"><b>Payee Name</b><input id="newPayeeName" type="text"></label><label class="field"><b>Payee Type</b><select id="newPayeeType"></select></label><label class="field"><b>Phone</b><input id="newPayeePhone" type="text"></label><label class="field"><b>Default Payment</b><select id="newPayeeDefaultPayment"><option value="">None</option></select></label></div><label class="field"><b>Address</b><input id="newPayeeAddress" type="text"></label><div class="row two"><label class="field"><b>Bank Name</b><input id="newPayeeBank" type="text"></label><label class="field"><b>Account Name</b><input id="newPayeeAccountName" type="text"></label></div><label class="field"><b>Account Number</b><input id="newPayeeAccountNumber" type="text"></label><label class="field"><b>Note</b><textarea id="newPayeeNote"></textarea></label><div id="payeeMessage" class="sheet-message"></div><div class="sheet-actions"><button type="button" data-close="payeeSheet">Cancel</button><button type="button" id="savePayeeBtn">Save Payee</button></div></div></div>
-
-<script src="mobile-expense.js?v=20260915-3"></script>
+<script src="mobile-expense.js?v=20260916-1"></script>
 </body>
 </html>
