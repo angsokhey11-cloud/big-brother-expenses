@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Expense Mobile V2 */
+/* BIG BROTHER — Monthly Expense Mobile V2.1 */
 (function(){
   'use strict';
 
@@ -115,19 +115,18 @@
   function renderTransaction(row){
     const status=clean(row.status).toUpperCase() || '-';
     return [
-      '<article class="transaction-card">',
-        '<div class="transaction-top">',
-          '<div><strong>',money(row.amountUSD),'</strong><small>',esc(dateDisplay(row.expenseDate)),'</small></div>',
-          '<span class="status ',statusClass(status),'">',esc(status),'</span>',
-        '</div>',
-        '<div class="transaction-id">',esc(row.expenseId || '-'),'</div>',
-        '<div class="transaction-desc">',esc(row.description || '-'),'</div>',
-        '<div class="transaction-grid">',
-          '<div><small>Payee</small><b>',esc(row.payee || '-'),'</b></div>',
-          '<div><small>Payment Method</small><b>',esc(row.paymentMethod || '-'),'</b></div>',
-          '<div class="full"><small>Reference</small><b>',esc(row.referenceNo || '-'),'</b></div>',
-        '</div>',
-      '</article>'
+      '<tr>',
+        '<td class="expense-id">',esc(row.expenseId || '-'),'</td>',
+        '<td>',esc(dateDisplay(row.expenseDate)),'</td>',
+        '<td>',esc(row.expenseType || '-'),'</td>',
+        '<td>',esc(row.category || '-'),'</td>',
+        '<td class="description-cell">',esc(row.description || '-'),'</td>',
+        '<td>',esc(row.payee || '-'),'</td>',
+        '<td class="amount-cell">',money(row.amountUSD),'</td>',
+        '<td><span class="status ',statusClass(status),'">',esc(status),'</span></td>',
+        '<td>',esc(row.paymentMethod || '-'),'</td>',
+        '<td>',esc(row.referenceNo || '-'),'</td>',
+      '</tr>'
     ].join('');
   }
 
@@ -141,7 +140,25 @@
     ].filter(Boolean).join(' · ');
 
     $('categoryList').innerHTML=rows.length
-      ? rows.map(renderTransaction).join('')
+      ? [
+          '<div class="transaction-table-wrap">',
+            '<table class="transaction-table">',
+              '<thead><tr>',
+                '<th>Expense ID</th>',
+                '<th>Date</th>',
+                '<th>Type</th>',
+                '<th>Category</th>',
+                '<th>Description</th>',
+                '<th>Payee</th>',
+                '<th>Amount USD</th>',
+                '<th>Status</th>',
+                '<th>Payment Method</th>',
+                '<th>Reference</th>',
+              '</tr></thead>',
+              '<tbody>',rows.map(renderTransaction).join(''),'</tbody>',
+            '</table>',
+          '</div>'
+        ].join('')
       : '<div class="empty-sheet">No expense transactions found for this category in the selected month.</div>';
 
     $('categorySheet').hidden=false;
