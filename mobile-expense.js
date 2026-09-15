@@ -1,4 +1,4 @@
-/* BIG BROTHER — Expense Recorder Mobile V1.1 */
+/* BIG BROTHER — Expense Recorder Mobile V1.2 */
 (function(){
 'use strict';
 const URL='https://sjfhlaclgmkwwofzstok.supabase.co';
@@ -15,15 +15,15 @@ let refreshPromise=null;
 
 function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
 function saveSession(s){session=s||null;try{if(!s){localStorage.removeItem(SESSION_KEY);return}if(!s.expires_at&&s.expires_in)s.expires_at=Math.floor(Date.now()/1000)+Number(s.expires_in);localStorage.setItem(SESSION_KEY,JSON.stringify(s))}catch(_){}}
-async function readResponse(r){const t=await r.text();let d;try{d=t?JSON.parse(t):{}}catch(_){d={message:t}}if(!r.ok){const e=new Error(d?.message||d?.error_description||d?.error||('Request failed ('+r.status+')'));e.status=r.status;e.retryAfter=Number(r.headers.get('retry-after')||0);throw e}return d}
+async function readResponse(r){const t=await r.text();let d;try{d=t?JSON.parse(t):{}}catch(_){d={message:t}}if(!r.ok){const detail=d?.message||d?.msg||d?.error_description||d?.error||d?.hint||d?.details||('Request failed ('+r.status+')');const e=new Error(detail);e.status=r.status;e.code=d?.code||'';e.retryAfter=Number(r.headers.get('retry-after')||0);throw e}return d}
 async function fetchRetry(url,options={},attempts=3){let last;for(let i=0;i<attempts;i++){try{const r=await fetch(url,options);if(r.status===429&&i<attempts-1){const retryAfter=Number(r.headers.get('retry-after')||0);await wait(retryAfter>0?retryAfter*1000:700*(i+1));continue}return r}catch(e){last=e;if(i===attempts-1)throw e;await wait(400*(i+1))}}throw last||new Error('Network request failed.')}
-async function refreshSession(){if(refreshPromise)return refreshPromise;refreshPromise=(async()=>{const current=readSession();if(!current?.refresh_token)throw new Error('Your BIG BROTHER session has expired. Please sign in again.');const r=await fetchRetry(URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:current.refresh_token}),cache:'no-store'},3);const next=await readResponse(r);saveSession(next);return next})().finally(()=>{refreshPromise=null});return refreshPromise}
-async function ensure(){session=readSession();if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER first.');const now=Math.floor(Date.now()/1000);if(session.expires_at&&Number(session.expires_at)<=now){await refreshSession();session=readSession()}return session}
+async function refreshSession(){if(refreshPromise)return refreshPromise;refreshPromise=(async()=>{const current=readSession();if(!current?.refresh_token)throw new Error('Your BIG BROTHER session has expired. Please sign in again.');const usedRefreshToken=current.refresh_token;const r=await fetchRetry(URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:usedRefreshToken}),cache:'no-store'},3);if(!r.ok){const newest=readSession();if(newest?.access_token&&newest?.refresh_token&&newest.refresh_token!==usedRefreshToken){session=newest;return newest}}const next=await readResponse(r);saveSession(next);return next})().finally(()=>{refreshPromise=null});return refreshPromise}
+async function ensure(){session=readSession();if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER first.');return session}
 async function rpc(fn,args={},retry401=true){const s=await ensure();const r=await fetchRetry(URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify(args||{}),cache:'no-store'},3);if(r.status===401&&retry401){await refreshSession();return rpc(fn,args,false)}return readResponse(r)}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function money(v,c=currency){const n=num(v);return c==='KHR'?n.toLocaleString('en-US',{maximumFractionDigits:0})+' ៛':'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function setMessage(text,error=false){$('status').textContent=text||'';$('status').classList.toggle('error',!!error)}
-function escapeHtml(v){return clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function escapeHtml(v){return clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]))}
 function escapeAttr(v){return escapeHtml(v)}
 function titleCase(v){return clean(v).toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}
 function showBootError(error){$('boot').innerHTML='<div class="boot-card">Could not open Expense Recorder<div>'+escapeHtml(error?.message||error)+'</div></div>'}
