@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Expense Mobile V2.1 */
+/* BIG BROTHER — Monthly Expense Mobile V2.2 */
 :root{
   --navy:#173f77;
   --blue:#245fae;
@@ -78,26 +78,47 @@ button:disabled,input:disabled{opacity:.55}
 .sheet-head span{display:block;margin-top:3px;color:var(--muted);font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sheet-head button{flex:0 0 auto;width:34px;height:34px;border:0;border-radius:50%;background:#eef3f8;color:var(--navy);font-size:17px;font-weight:900}
 .transaction-list{display:block;max-height:calc(92dvh - 62px);overflow:auto;padding:7px 7px calc(10px + env(safe-area-inset-bottom))}
-.transaction-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;-webkit-overflow-scrolling:touch}
-.transaction-table{width:100%;min-width:980px;border-collapse:collapse;background:#fff}
-.transaction-table th,.transaction-table td{height:34px;padding:6px 8px;border-bottom:1px solid #edf1f5;text-align:left;vertical-align:middle;font-size:8px;white-space:nowrap}
-.transaction-table th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-size:7px;font-weight:1000;text-transform:uppercase;letter-spacing:.15px}
+.transaction-table-wrap{overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fff}
+.transaction-table{width:100%;min-width:0;border-collapse:collapse;table-layout:fixed;background:#fff}
+.transaction-table .col-date{width:14%}
+.transaction-table .col-description{width:28%}
+.transaction-table .col-category{width:17%}
+.transaction-table .col-amount{width:15%}
+.transaction-table .col-status{width:12%}
+.transaction-table .col-payment{width:14%}
+.transaction-table th,.transaction-table td{height:32px;padding:5px 4px;border-bottom:1px solid #edf1f5;text-align:left;vertical-align:middle;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.transaction-table th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-size:6px;font-weight:1000;text-transform:uppercase;letter-spacing:.08px}
 .transaction-table tbody tr:last-child td{border-bottom:0}
-.transaction-table tbody tr:hover{background:#f8fbff}
-.transaction-table .expense-id{color:var(--blue);font-weight:1000}
-.transaction-table .description-cell{max-width:240px;overflow:hidden;text-overflow:ellipsis}
-.transaction-table .amount-cell{color:var(--navy);font-weight:1000;text-align:right}
-.status{display:inline-block;border-radius:999px;padding:3px 6px;font-size:7px;font-weight:1000;white-space:nowrap}
+.transaction-table tbody tr:nth-child(even){background:#fbfcfe}
+.transaction-table .date-cell{font-variant-numeric:tabular-nums}
+.transaction-table .description-cell,.transaction-table .category-cell,.transaction-table .payment-cell{overflow:hidden;text-overflow:ellipsis}
+.transaction-table .amount-cell{color:var(--navy);font-weight:1000;text-align:right;font-variant-numeric:tabular-nums}
+.transaction-table .status-cell{text-align:center;overflow:visible}
+.status{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;border-radius:999px;padding:2px 4px;font-size:5.8px;font-weight:1000;white-space:nowrap;vertical-align:middle}
 .status.PAID{background:#edf8f2;color:var(--green)}
 .status.UNPAID,.status.PARTIAL{background:#fff5df;color:var(--orange)}
 .status.POSTED{background:#eaf4ff;color:var(--blue)}
 .status.OTHER{background:#eef2f6;color:#526b84}
 .empty-sheet{padding:24px 12px;text-align:center;color:var(--muted);font-size:9px}
 
+@media(max-width:390px){
+  .transaction-table .col-date{width:15%}
+  .transaction-table .col-description{width:26%}
+  .transaction-table .col-category{width:17%}
+  .transaction-table .col-amount{width:15%}
+  .transaction-table .col-status{width:12%}
+  .transaction-table .col-payment{width:15%}
+  .transaction-table th,.transaction-table td{height:31px;padding:4px 3px;font-size:6.4px}
+  .transaction-table th{font-size:5.5px}
+  .status{font-size:5.2px;padding:2px 3px}
+}
+
 @media(max-width:345px){
   .period-card{grid-template-columns:36px minmax(0,1fr) 36px 36px}
   .category-row{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:7px}
   .view-btn{padding:5px 6px}
-  .transaction-table{min-width:920px}
-  .transaction-table th,.transaction-table td{height:32px;padding:5px 7px;font-size:7px}
+  .transaction-list{padding-left:4px;padding-right:4px}
+  .transaction-table th,.transaction-table td{height:30px;padding:4px 2px;font-size:6px}
+  .transaction-table th{font-size:5px}
+  .status{font-size:4.9px;padding:2px}
 }
