@@ -1,59 +1,121 @@
-/* BIG BROTHER — Expense Recorder Mobile V1.2 */
+/* BIG BROTHER — Expense Recorder Mobile Wrapper V2 */
 (function(){
 'use strict';
-const URL='https://sjfhlaclgmkwwofzstok.supabase.co';
-const KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
-const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
-const RATE_KEY='bb_expense_exchange_rate_v1';
-const $=id=>document.getElementById(id);
-const clean=v=>String(v??'').trim();
-const num=v=>Number.isFinite(Number(v))?Number(v):0;
-const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-let session=null,bootstrap=null,categories=[],payees=[],paymentMethods=[],payeeTypes=[],revision='0';
-let expenseType='OPERATING EXPENSE',paymentStatus='PAID',currency='USD',selectedPayeeId='';
-let refreshPromise=null;
 
-function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
-function saveSession(s){session=s||null;try{if(!s){localStorage.removeItem(SESSION_KEY);return}if(!s.expires_at&&s.expires_in)s.expires_at=Math.floor(Date.now()/1000)+Number(s.expires_in);localStorage.setItem(SESSION_KEY,JSON.stringify(s))}catch(_){}}
-async function readResponse(r){const t=await r.text();let d;try{d=t?JSON.parse(t):{}}catch(_){d={message:t}}if(!r.ok){const detail=d?.message||d?.msg||d?.error_description||d?.error||d?.hint||d?.details||('Request failed ('+r.status+')');const e=new Error(detail);e.status=r.status;e.code=d?.code||'';e.retryAfter=Number(r.headers.get('retry-after')||0);throw e}return d}
-async function fetchRetry(url,options={},attempts=3){let last;for(let i=0;i<attempts;i++){try{const r=await fetch(url,options);if(r.status===429&&i<attempts-1){const retryAfter=Number(r.headers.get('retry-after')||0);await wait(retryAfter>0?retryAfter*1000:700*(i+1));continue}return r}catch(e){last=e;if(i===attempts-1)throw e;await wait(400*(i+1))}}throw last||new Error('Network request failed.')}
-async function refreshSession(){if(refreshPromise)return refreshPromise;refreshPromise=(async()=>{const current=readSession();if(!current?.refresh_token)throw new Error('Your BIG BROTHER session has expired. Please sign in again.');const usedRefreshToken=current.refresh_token;const r=await fetchRetry(URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:usedRefreshToken}),cache:'no-store'},3);if(!r.ok){const newest=readSession();if(newest?.access_token&&newest?.refresh_token&&newest.refresh_token!==usedRefreshToken){session=newest;return newest}}const next=await readResponse(r);saveSession(next);return next})().finally(()=>{refreshPromise=null});return refreshPromise}
-async function ensure(){session=readSession();if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER first.');return session}
-async function rpc(fn,args={},retry401=true){const s=await ensure();const r=await fetchRetry(URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify(args||{}),cache:'no-store'},3);if(r.status===401&&retry401){await refreshSession();return rpc(fn,args,false)}return readResponse(r)}
-function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function money(v,c=currency){const n=num(v);return c==='KHR'?n.toLocaleString('en-US',{maximumFractionDigits:0})+' ៛':'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function setMessage(text,error=false){$('status').textContent=text||'';$('status').classList.toggle('error',!!error)}
-function escapeHtml(v){return clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]))}
-function escapeAttr(v){return escapeHtml(v)}
-function titleCase(v){return clean(v).toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}
-function showBootError(error){$('boot').innerHTML='<div class="boot-card">Could not open Expense Recorder<div>'+escapeHtml(error?.message||error)+'</div></div>'}
+const frame=document.getElementById('expenseFrame');
+const boot=document.getElementById('boot');
+const bootCard=document.getElementById('bootCard');
 
-async function loadBootstrap(preserve=true){const currentCategory=preserve?$('category').value:'';const currentPayee=preserve?selectedPayeeId:'';bootstrap=await rpc('bb_expense_mobile_add_bootstrap');revision=clean(bootstrap.revision)||'0';categories=Array.isArray(bootstrap.categories)?bootstrap.categories:[];payees=Array.isArray(bootstrap.payees)?bootstrap.payees:[];paymentMethods=Array.isArray(bootstrap.paymentMethods)?bootstrap.paymentMethods:[];payeeTypes=Array.isArray(bootstrap.payeeTypes)?bootstrap.payeeTypes:[];renderCategories(currentCategory);renderPaymentMethods();renderPayeeTypes();if(currentPayee){const p=payees.find(x=>clean(x.payeeId)===currentPayee);if(p)selectPayee(p)}}
-function renderCategories(preferred=''){const select=$('category');const rows=categories.filter(c=>c.active!==false&&clean(c.expenseType).toUpperCase()===expenseType);select.innerHTML='<option value="">Select Expense Category</option>'+rows.map(c=>'<option value="'+escapeAttr(c.category)+'">'+escapeHtml(c.category)+'</option>').join('');if(preferred&&rows.some(c=>clean(c.category)===preferred))select.value=preferred;$('categoryHelp').textContent=rows.length+' active '+(rows.length===1?'category':'categories')+' under '+expenseType+'.'}
-function renderPaymentMethods(){const select=$('paymentMethod');const cur=select.value;select.innerHTML='<option value="">Select Payment Method</option>'+paymentMethods.map(x=>'<option value="'+escapeAttr(x)+'">'+escapeHtml(x)+'</option>').join('');if(paymentMethods.includes(cur))select.value=cur}
-function renderPayeeTypes(){$('newPayeeType').innerHTML=payeeTypes.map(x=>'<option value="'+escapeAttr(x)+'">'+escapeHtml(titleCase(x))+'</option>').join('');$('newPayeeDefaultPayment').innerHTML='<option value="">None</option>'+paymentMethods.map(x=>'<option value="'+escapeAttr(x)+'">'+escapeHtml(x)+'</option>').join('')}
+function esc(value){
+  return String(value==null?'':value).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];
+  });
+}
 
-function setExpenseType(value){expenseType=clean(value).toUpperCase();document.querySelectorAll('#typeButtons button').forEach(b=>b.classList.toggle('active',b.dataset.type===expenseType));renderCategories('');$('newCategoryType').value=expenseType}
-function setPaymentStatus(value){paymentStatus=clean(value).toUpperCase();document.querySelectorAll('#statusButtons button').forEach(b=>b.classList.toggle('active',b.dataset.status===paymentStatus));const unpaid=paymentStatus==='UNPAID';$('paymentMethodWrap').hidden=unpaid;$('dueDateWrap').hidden=!unpaid;$('paymentHelp').textContent=unpaid?'Unpaid expense will be saved into Accrued Expenses and requires a Due Date.':'Paid expense will be saved directly into Expense History.';if(unpaid){$('paymentMethod').value=''}else{$('dueDate').value=''}}
-function setCurrency(value){currency=clean(value).toUpperCase()==='KHR'?'KHR':'USD';document.querySelectorAll('#currencyButtons button').forEach(b=>b.classList.toggle('active',b.dataset.currency===currency));$('amountSymbol').textContent=currency==='KHR'?'៛':'$';$('amount').step=currency==='KHR'?'1':'0.01';updateConverted()}
-function updateConverted(){const amount=num($('amount').value),rate=Math.max(1,num($('exchangeRate').value));$('convertedAmount').textContent='Amount USD: '+money(currency==='KHR'?amount/rate:amount,'USD');try{localStorage.setItem(RATE_KEY,String(rate))}catch(_){}}
+function showError(message){
+  if(!bootCard)return;
+  bootCard.innerHTML='Could not open Expense Recorder<div>'+esc(message||'Unknown error')+'</div>';
+}
 
-function renderPayeeSuggestions(){const q=clean($('payeeSearch').value).toLowerCase();if(!q){$('payeeSuggestions').hidden=true;return}const rows=payees.filter(p=>[p.payeeName,p.payeeType,p.phone].join(' ').toLowerCase().includes(q)).slice(0,8);$('payeeSuggestions').innerHTML=rows.length?rows.map(p=>'<button type="button" class="suggestion" data-id="'+escapeAttr(p.payeeId)+'"><strong>'+escapeHtml(p.payeeName)+'</strong><small>'+escapeHtml(p.payeeType||'Payee')+(p.phone?' · '+escapeHtml(p.phone):'')+'</small></button>').join(''):'<div class="suggestion"><small>No saved Payee found.</small></div>';$('payeeSuggestions').hidden=false}
-function selectPayee(p){selectedPayeeId=clean(p?.payeeId);$('payeeSearch').value=clean(p?.payeeName);$('payeeSelected').textContent=selectedPayeeId?(clean(p.payeeType||'Payee')+' · '+selectedPayeeId):'';$('payeeSuggestions').hidden=true;if(p?.defaultPaymentMethod&&paymentStatus==='PAID'&&paymentMethods.includes(p.defaultPaymentMethod))$('paymentMethod').value=p.defaultPaymentMethod}
-function clearPayee(){selectedPayeeId='';$('payeeSelected').textContent=''}
-function openSheet(id){$(id).hidden=false;document.body.style.overflow='hidden'}
-function closeSheet(id){$(id).hidden=true;document.body.style.overflow=''}
-function sheetMessage(id,text,error=false){const el=$(id);el.textContent=text||'';el.classList.toggle('error',!!error)}
+function collapseNote(doc){
+  if(doc.getElementById('bbExpenseNoteDetails'))return;
+  const note=doc.getElementById('note');
+  if(!note)return;
+  const field=note.closest('.field');
+  if(!field)return;
 
-async function saveCategory(){const name=clean($('newCategoryName').value);if(!name){sheetMessage('categoryMessage','Category Name is required.',true);return}const btn=$('saveCategoryBtn');btn.disabled=true;sheetMessage('categoryMessage','Saving Category...');try{const r=await rpc('bb_expense_create_category',{p_payload:{categoryName:name,expenseType}});if(!r?.success||!r.category)throw new Error('Could not save Expense Category.');categories=categories.filter(c=>clean(c.categoryId)!==clean(r.category.categoryId)&&clean(c.category).toLowerCase()!==clean(r.category.category).toLowerCase());categories.push(r.category);renderCategories(clean(r.category.category));revision=clean(r.revision)||revision;closeSheet('categorySheet');$('newCategoryName').value='';sheetMessage('categoryMessage','')}catch(e){sheetMessage('categoryMessage',e.message,true)}finally{btn.disabled=false}}
-async function savePayee(){const payeeName=clean($('newPayeeName').value);if(!payeeName){sheetMessage('payeeMessage','Payee Name is required.',true);return}const btn=$('savePayeeBtn');btn.disabled=true;sheetMessage('payeeMessage','Saving Payee...');try{const payload={payeeName,payeeType:$('newPayeeType').value,phone:clean($('newPayeePhone').value),address:clean($('newPayeeAddress').value),defaultPaymentMethod:$('newPayeeDefaultPayment').value,bankName:clean($('newPayeeBank').value),accountName:clean($('newPayeeAccountName').value),accountNumber:clean($('newPayeeAccountNumber').value),note:clean($('newPayeeNote').value)};const r=await rpc('bb_expense_create_payee',{p_payload:payload});if(!r?.success||!r.payee)throw new Error('Could not save Payee.');payees=payees.filter(p=>clean(p.payeeId)!==clean(r.payee.payeeId));payees.push(r.payee);selectPayee(r.payee);revision=clean(r.revision)||revision;closeSheet('payeeSheet');['newPayeeName','newPayeePhone','newPayeeAddress','newPayeeBank','newPayeeAccountName','newPayeeAccountNumber','newPayeeNote'].forEach(id=>$(id).value='');$('newPayeeDefaultPayment').value='';sheetMessage('payeeMessage','')}catch(e){sheetMessage('payeeMessage',e.message,true)}finally{btn.disabled=false}}
+  const details=doc.createElement('details');
+  details.id='bbExpenseNoteDetails';
+  details.className='bb-expense-note-details';
+  const summary=doc.createElement('summary');
+  summary.innerHTML='📝 Note <span>Optional</span>';
+  field.parentNode.insertBefore(details,field);
+  details.appendChild(summary);
+  details.appendChild(field);
+}
 
-function resetForm(hideSuccess=true){$('expenseDate').value=today();setExpenseType('OPERATING EXPENSE');$('category').value='';$('payeeSearch').value='';clearPayee();$('description').value='';setPaymentStatus('PAID');setCurrency('USD');$('amount').value='';$('paymentMethod').value='';$('dueDate').value='';$('referenceNo').value='';$('note').value='';document.querySelector('.note-details').open=false;setMessage('');if(hideSuccess)$('successCard').hidden=true;updateConverted()}
-function validate(){if(!$('expenseDate').value)throw new Error('Expense Date is required.');if(!$('category').value)throw new Error('Expense Category is required.');if(!selectedPayeeId)throw new Error('Please select a saved Payee.');if(!clean($('description').value))throw new Error('Description is required.');if(num($('amount').value)<=0)throw new Error('Amount must be greater than zero.');if(currency==='KHR'&&num($('exchangeRate').value)<=0)throw new Error('Exchange Rate is required for KHR.');if(paymentStatus==='PAID'&&!$('paymentMethod').value)throw new Error('Payment Method is required for a paid expense.');if(paymentStatus==='UNPAID'&&!$('dueDate').value)throw new Error('Due Date is required for an unpaid expense.')}
-async function saveExpense(e){e.preventDefault();const btn=$('saveBtn');try{validate();btn.disabled=true;setMessage('Saving Expense...');const payload={expenseDate:$('expenseDate').value,expenseType,category:$('category').value,payeeId:selectedPayeeId,description:clean($('description').value),currency,exchangeRate:num($('exchangeRate').value),amount:num($('amount').value),paymentStatus,paymentMethod:paymentStatus==='PAID'?$('paymentMethod').value:'',dueDate:paymentStatus==='UNPAID'?$('dueDate').value:'',referenceNo:clean($('referenceNo').value),note:clean($('note').value)};const r=await rpc('bb_expense_create',{p_payload:payload});if(!r?.success||!r.expense)throw new Error('Could not save Expense.');revision=clean(r.revision)||revision;const x=r.expense;$('successId').textContent=clean(x.expenseId||'Expense saved');$('successType').textContent=clean(x.expenseType||expenseType);$('successCategory').textContent=clean(x.category||x.categoryName||payload.category);$('successAmount').textContent=money(x.amount??payload.amount,x.currency||currency);$('successStatus').textContent=clean(x.status||paymentStatus);$('successCard').hidden=false;setMessage('Expense saved successfully.');$('successCard').scrollIntoView({behavior:'smooth',block:'center'})}catch(err){setMessage(err.message,true)}finally{btn.disabled=false}}
+function markStickyActions(doc){
+  const form=doc.getElementById('expenseForm');
+  if(!form)return;
+  const save=doc.getElementById('saveBtn');
+  const clear=doc.getElementById('clearBtn');
+  if(!save||!clear)return;
+  const actions=save.closest('.actions');
+  if(actions&&actions.contains(clear))actions.classList.add('bb-expense-sticky-actions');
+}
 
-function bind(){document.querySelectorAll('#typeButtons button').forEach(b=>b.addEventListener('click',()=>setExpenseType(b.dataset.type)));document.querySelectorAll('#statusButtons button').forEach(b=>b.addEventListener('click',()=>setPaymentStatus(b.dataset.status)));document.querySelectorAll('#currencyButtons button').forEach(b=>b.addEventListener('click',()=>setCurrency(b.dataset.currency)));$('amount').addEventListener('input',updateConverted);$('exchangeRate').addEventListener('input',updateConverted);$('payeeSearch').addEventListener('input',()=>{clearPayee();renderPayeeSuggestions()});$('payeeSearch').addEventListener('focus',renderPayeeSuggestions);$('payeeSuggestions').addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(!b)return;const p=payees.find(x=>clean(x.payeeId)===clean(b.dataset.id));if(p)selectPayee(p)});document.addEventListener('click',e=>{if(!e.target.closest('.payee-field'))$('payeeSuggestions').hidden=true});$('newCategoryBtn').addEventListener('click',()=>{$('newCategoryType').value=expenseType;sheetMessage('categoryMessage','');openSheet('categorySheet');setTimeout(()=>$('newCategoryName').focus(),50)});$('newPayeeBtn').addEventListener('click',()=>{sheetMessage('payeeMessage','');openSheet('payeeSheet');setTimeout(()=>$('newPayeeName').focus(),50)});document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeSheet(b.dataset.close)));document.querySelectorAll('.sheet-wrap').forEach(w=>w.addEventListener('click',e=>{if(e.target===w)closeSheet(w.id)}));$('saveCategoryBtn').addEventListener('click',saveCategory);$('savePayeeBtn').addEventListener('click',savePayee);$('clearBtn').addEventListener('click',()=>resetForm(true));$('addAnotherBtn').addEventListener('click',()=>resetForm(true));$('expenseForm').addEventListener('submit',saveExpense);$('expenseDate').addEventListener('change',()=>{if(paymentStatus==='UNPAID'&&!$('dueDate').value)$('dueDate').value=$('expenseDate').value})}
+function inject(){
+  let doc,win;
+  try{
+    doc=frame.contentDocument||frame.contentWindow.document;
+    win=frame.contentWindow;
+  }catch(error){
+    showError(error.message);
+    return false;
+  }
 
-async function init(){try{bind();const stored=Number(localStorage.getItem(RATE_KEY));$('exchangeRate').value=Number.isFinite(stored)&&stored>0?String(stored):'4100';resetForm(true);await loadBootstrap(false);$('boot').hidden=true;$('app').hidden=false;setMessage(categories.length+' categories and '+payees.length+' Payees ready.');setInterval(async()=>{try{const next=clean(await rpc('bb_expense_revision'));if(next&&revision&&next!==revision)await loadBootstrap(true)}catch(_){}},30000)}catch(e){console.error('Expense Recorder Mobile:',e);showBootError(e)}}
-init();
+  if(!doc||!doc.head||!doc.body)return false;
+
+  if(!doc.getElementById('bb-expense-mobile-css')){
+    const link=doc.createElement('link');
+    link.id='bb-expense-mobile-css';
+    link.rel='stylesheet';
+    link.href='mobile-expense.css?v=20260916-1';
+    doc.head.appendChild(link);
+  }
+
+  const form=doc.getElementById('expenseForm');
+  const view=doc.getElementById('viewAddExpense');
+  if(!form||!view)return false;
+
+  doc.documentElement.classList.add('bb-expense-mobile');
+  doc.body.classList.add('bb-expense-mobile-body');
+
+  collapseNote(doc);
+  markStickyActions(doc);
+
+  const addCategory=doc.getElementById('addCategoryBtn');
+  if(addCategory) addCategory.textContent='+ New';
+  const addPayee=doc.getElementById('addPayeeBtn');
+  if(addPayee) addPayee.textContent='+ New';
+
+  boot.classList.add('hide');
+  frame.style.display='block';
+
+  if(!doc.body.dataset.bbExpenseMobileWatch){
+    doc.body.dataset.bbExpenseMobileWatch='1';
+    new win.MutationObserver(function(){
+      collapseNote(doc);
+      markStickyActions(doc);
+    }).observe(doc.body,{childList:true,subtree:true});
+  }
+
+  return true;
+}
+
+function scheduleInject(){
+  [60,180,450,900,1600,2600,4200].forEach(function(ms){
+    setTimeout(function(){
+      try{ inject(); }catch(error){ console.error('Expense Mobile inject:',error); }
+    },ms);
+  });
+}
+
+frame.addEventListener('load',scheduleInject);
+frame.addEventListener('error',function(){showError('Could not load the live Expenses engine.')});
+
+frame.src='index.html?embed=1&view=add-expense&mobileSkin=1&v=20260916-1';
+scheduleInject();
+
+setTimeout(function(){
+  if(!boot.classList.contains('hide')){
+    const ok=inject();
+    if(!ok){
+      const doc=frame.contentDocument;
+      const text=(doc&&doc.body&&doc.body.innerText||'').trim();
+      if(text&&/error|denied|expired|failed|sign in/i.test(text)) showError(text.slice(0,280));
+    }
+  }
+},6500);
+
 })();
