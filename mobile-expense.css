@@ -1,5 +1,88 @@
-/* BIG BROTHER — Expense Recorder Mobile V1 */
-:root{--navy:#173f77;--blue:#245fae;--bg:#eef3f8;--line:#dce5ef;--text:#172b43;--muted:#6d7f93;--green:#18864b;--red:#c0392b;--amber:#a96800}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}.boot{min-height:100vh;display:grid;place-items:center;padding:18px}.boot-card{padding:18px 22px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--navy);font-weight:900;text-align:center;box-shadow:0 8px 30px #173a6615}.boot-card div{margin-top:5px;color:var(--muted);font-size:10px;font-weight:700}.app{width:100%;max-width:760px;margin:auto;padding:8px 8px 92px}.mobile-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;padding:10px 11px;border:1px solid var(--line);border-radius:13px;background:#fff}.mobile-head h1{margin:0;color:var(--navy);font-size:18px;line-height:1.1}.mobile-head p{margin:3px 0 0;color:var(--muted);font-size:9px;font-weight:700}.mobile-head>span{padding:6px 8px;border-radius:999px;background:#e8f7ef;color:#168652;font-size:8px;font-weight:900;white-space:nowrap}.card{margin:0 0 8px;padding:10px;border:1px solid var(--line);border-radius:13px;background:#fff}.row{display:grid;gap:8px}.row.two{grid-template-columns:1fr 1fr}.field{position:relative;display:block;min-width:0;margin:0 0 9px}.field>b{display:block;margin-bottom:4px;color:#526b84;font-size:8px;text-transform:uppercase;letter-spacing:.2px}.field small{display:block;margin-top:4px;color:var(--muted);font-size:8px;line-height:1.35}.field input,.field select,.field textarea{width:100%;min-height:42px;border:1px solid #cbd8e7;border-radius:9px;background:#fff;color:var(--text);padding:8px 9px;outline:none}.field textarea{min-height:80px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:#5f95dd;box-shadow:0 0 0 2px rgba(36,95,174,.1)}.with-action{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}.with-action>button{min-width:68px;border:0;border-radius:9px;background:#eaf4ff;color:var(--blue);font-size:9px;font-weight:900}.seg{display:grid;gap:6px}.seg.two{grid-template-columns:1fr 1fr}.seg.three{grid-template-columns:repeat(3,1fr)}.seg button{min-height:40px;border:1px solid #cbd8e7;border-radius:9px;background:#f7f9fc;color:#526b84;padding:7px 6px;font-size:9px;font-weight:900;line-height:1.15}.seg button.active{border-color:var(--blue);background:var(--blue);color:#fff}.amount-card{margin:1px 0 9px;padding:9px;border:1px solid #bfd3ef;border-radius:11px;background:linear-gradient(135deg,#f8fbff,#edf5ff)}.amount-line{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;margin-top:8px}.amount-line span{color:var(--navy);font-size:23px;font-weight:1000}.amount-line input{width:100%;min-height:54px;border:1px solid #cbd8e7;border-radius:9px;padding:7px 10px;background:#fff;text-align:right;color:var(--navy);font-size:24px;font-weight:1000;outline:none}.rate-line{display:grid;grid-template-columns:auto 100px;gap:6px;align-items:center;margin-top:8px;padding:7px 8px;border:1px solid #d5e2f1;border-radius:9px;background:#fff}.rate-line span{font-size:8px;color:#526b84;font-weight:900}.rate-line input{min-width:0;width:100%;height:34px;border:1px solid #d5e2f1;border-radius:7px;padding:5px 7px;text-align:right;color:var(--navy);font-weight:900}.rate-line strong{grid-column:1/-1;text-align:right;color:#607890;font-size:8px}.payment-row{align-items:start}.note-details{margin-top:2px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;overflow:hidden}.note-details summary{cursor:pointer;padding:10px;color:var(--navy);font-size:10px;font-weight:900;list-style:none}.note-details summary span{float:right;color:var(--muted);font-size:8px}.note-details textarea{display:block;width:calc(100% - 16px);min-height:80px;margin:0 8px 8px;border:1px solid #cbd8e7;border-radius:8px;padding:8px;resize:vertical}.status{min-height:16px;margin:4px 2px 8px;color:var(--muted);font-size:9px;line-height:1.35}.status.error{color:var(--red)}.success-card{margin:0 0 8px;padding:10px;border:1px solid #bfe0cc;border-radius:12px;background:#edf8f2}.success-card>strong{color:#12663b;font-size:14px}.success-card>#successId{margin-top:3px;color:#4b6a59;font-size:10px;font-weight:900}.success-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.success-grid span{padding:7px;border:1px solid #cfe6d7;border-radius:8px;background:#fff;color:#1f4e36;font-size:9px;font-weight:900}.success-card button{width:100%;min-height:38px;margin-top:8px;border:0;border-radius:8px;background:#fff;color:#12663b;font-size:9px;font-weight:900}.sticky-actions{position:fixed;left:0;right:0;bottom:0;z-index:900;display:grid;grid-template-columns:.9fr 1.6fr;gap:8px;padding:8px max(8px,calc((100vw - 760px)/2 + 8px)) calc(8px + env(safe-area-inset-bottom));background:rgba(238,243,248,.96);border-top:1px solid #dce5ef;backdrop-filter:blur(8px)}.sticky-actions button{min-height:44px;border:0;border-radius:10px;font-weight:900}.sticky-actions #clearBtn{background:#e9eef5;color:#36536f}.sticky-actions #saveBtn{background:var(--green);color:#fff}.sticky-actions #saveBtn:disabled{opacity:.6}.payee-field{z-index:5}.suggestions{position:absolute;z-index:40;left:0;right:74px;top:54px;max-height:220px;overflow:auto;border:1px solid #cbd8e7;border-radius:9px;background:#fff;box-shadow:0 12px 28px rgba(29,55,85,.16)}.suggestion{width:100%;border:0;border-bottom:1px solid #edf1f5;background:#fff;padding:8px 9px;text-align:left}.suggestion strong{display:block;color:var(--navy);font-size:10px}.suggestion small{display:block;margin-top:2px;color:var(--muted);font-size:8px}.sheet-wrap{position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;background:rgba(11,25,44,.58)}.sheet-wrap[hidden]{display:none}.sheet{width:100%;max-height:92dvh;overflow:auto;border-radius:18px 18px 0 0;background:#fff;padding:12px 12px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -16px 45px rgba(0,0,0,.18)}.sheet-head{position:sticky;top:-12px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-12px -12px 10px;padding:12px;background:#fff;border-bottom:1px solid var(--line)}.sheet-head strong{color:var(--navy);font-size:15px}.sheet-head button{width:36px;height:36px;border:0;border-radius:50%;background:#eef3f8;color:var(--navy);font-size:18px;font-weight:900}.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sheet-actions button{min-height:42px;border:0;border-radius:9px;font-size:10px;font-weight:900}.sheet-actions button:first-child{background:#e9eef5;color:#36536f}.sheet-actions button:last-child{background:var(--green);color:#fff}.sheet-message{min-height:16px;margin:5px 0 8px;color:var(--muted);font-size:9px}.sheet-message.error{color:var(--red)}
-@media(max-width:430px){.app{padding:6px 6px 92px}.row.two{grid-template-columns:1fr 1fr;gap:6px}.seg.three button{font-size:8px;padding:6px 3px}.field input,.field select{font-size:14px}.with-action>button{min-width:62px}.rate-line{grid-template-columns:auto 88px}.mobile-head h1{font-size:17px}}
-@media(max-width:350px){.row.two{grid-template-columns:1fr}.payment-row{grid-template-columns:1fr}.seg.three{grid-template-columns:1fr 1fr 1fr}.success-grid{grid-template-columns:1fr}}
+/* BIG BROTHER — Expense Recorder Mobile Wrapper V2 */
+:root{--bb-bg:#eef3f8;--bb-line:#dce5ef;--bb-navy:#173f77;--bb-blue:#245fae;--bb-green:#18864b;--bb-muted:#6d7f93}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bb-bg);font-family:Arial,Helvetica,sans-serif}
+body{overflow:hidden}
+.boot{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:18px;background:var(--bb-bg);transition:opacity .18s ease}
+.boot.hide{opacity:0;pointer-events:none}
+.boot-card{min-width:260px;max-width:88vw;padding:18px 22px;border:1px solid var(--bb-line);border-radius:14px;background:#fff;color:var(--bb-navy);font-weight:900;text-align:center;box-shadow:0 8px 30px #173a6615}
+.boot-card div{margin-top:6px;color:var(--bb-muted);font-size:10px;font-weight:700;line-height:1.4}
+#expenseFrame{display:none;width:100%;height:100dvh;border:0;background:var(--bb-bg)}
+
+/* injected into the live Expenses page */
+html.bb-expense-mobile,html.bb-expense-mobile body{background:var(--bb-bg)!important}
+body.bb-expense-mobile-body{overflow:auto!important;padding-bottom:78px!important}
+body.bb-expense-mobile-body .app{width:100%!important;max-width:760px!important;margin:0 auto!important;padding:6px 6px 86px!important}
+body.bb-expense-mobile-body .topbar{display:none!important}
+body.bb-expense-mobile-body .view-section{display:block}
+body.bb-expense-mobile-body #viewExpenseHistory,
+body.bb-expense-mobile-body #viewAccruedExpenses{display:none!important}
+body.bb-expense-mobile-body .card{margin:0 0 7px!important;padding:9px!important;border-radius:12px!important;box-shadow:none!important}
+body.bb-expense-mobile-body .card-title{margin:0 0 7px!important;font-size:13px!important}
+body.bb-expense-mobile-body .flow-note{margin-bottom:8px!important;padding:7px 8px!important;border-radius:8px!important;font-size:9px!important;line-height:1.35!important}
+body.bb-expense-mobile-body .grid-2{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}
+body.bb-expense-mobile-body .field{min-width:0!important}
+body.bb-expense-mobile-body .field.full{grid-column:1/-1!important}
+body.bb-expense-mobile-body label{margin-bottom:4px!important;font-size:8px!important}
+body.bb-expense-mobile-body input,
+body.bb-expense-mobile-body select,
+body.bb-expense-mobile-body textarea{min-height:40px!important;padding:7px 8px!important;border-radius:8px!important;font-size:14px!important}
+body.bb-expense-mobile-body textarea{min-height:76px!important}
+body.bb-expense-mobile-body .type-grid{grid-template-columns:repeat(3,1fr)!important;gap:5px!important}
+body.bb-expense-mobile-body .type-btn{min-height:40px!important;padding:6px 4px!important;font-size:8px!important;border-radius:8px!important}
+body.bb-expense-mobile-body .payee-input-row{grid-template-columns:minmax(0,1fr) auto!important;gap:5px!important}
+body.bb-expense-mobile-body .payee-add-btn{min-width:62px!important;min-height:40px!important;padding:6px 8px!important;font-size:8px!important}
+body.bb-expense-mobile-body .payee-selected{margin-top:4px!important;padding:6px 7px!important;font-size:8px!important}
+body.bb-expense-mobile-body .payment-status-box{padding:8px!important;margin-bottom:8px!important;border-radius:9px!important}
+body.bb-expense-mobile-body .payment-status-options{grid-template-columns:1fr 1fr!important;gap:5px!important}
+body.bb-expense-mobile-body .payment-status-btn{min-height:40px!important;font-size:10px!important}
+body.bb-expense-mobile-body .payment-status-help{margin-top:5px!important;font-size:8px!important}
+body.bb-expense-mobile-body .money-card{padding:8px!important;border-radius:10px!important}
+body.bb-expense-mobile-body .currency-row{gap:5px!important;margin-bottom:7px!important}
+body.bb-expense-mobile-body .currency-btn{min-height:36px!important;font-size:10px!important}
+body.bb-expense-mobile-body #amount{min-height:50px!important;font-size:23px!important}
+body.bb-expense-mobile-body .amount-symbol{font-size:22px!important}
+body.bb-expense-mobile-body .rate-card{padding:7px 8px!important;margin-top:7px!important}
+body.bb-expense-mobile-body .rate-head{margin-bottom:5px!important;font-size:8px!important}
+body.bb-expense-mobile-body .rate-row{gap:5px!important}
+body.bb-expense-mobile-body .rate-row strong{font-size:10px!important}
+body.bb-expense-mobile-body #exchangeRate{min-height:36px!important;font-size:14px!important}
+body.bb-expense-mobile-body .converted{margin-top:5px!important;font-size:8px!important}
+body.bb-expense-mobile-body .bb-expense-note-details{grid-column:1/-1;margin-top:1px;border:1px solid var(--bb-line);border-radius:8px;background:#fbfcfe;overflow:hidden}
+body.bb-expense-mobile-body .bb-expense-note-details summary{padding:9px 10px;color:var(--bb-navy);font-size:9px;font-weight:900;cursor:pointer;list-style:none}
+body.bb-expense-mobile-body .bb-expense-note-details summary span{float:right;color:var(--bb-muted);font-size:8px}
+body.bb-expense-mobile-body .bb-expense-note-details>.field{padding:0 8px 8px!important;margin:0!important}
+body.bb-expense-mobile-body .bb-expense-note-details>.field>label{display:none!important}
+body.bb-expense-mobile-body .bb-expense-sticky-actions{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:120!important;display:grid!important;grid-template-columns:.9fr 1.6fr!important;gap:7px!important;margin:0!important;padding:7px max(7px,calc((100vw - 760px)/2 + 7px)) calc(7px + env(safe-area-inset-bottom))!important;border-top:1px solid var(--bb-line)!important;background:rgba(238,243,248,.96)!important;backdrop-filter:blur(8px)!important}
+body.bb-expense-mobile-body .bb-expense-sticky-actions .btn{min-height:42px!important;border-radius:9px!important}
+body.bb-expense-mobile-body .bb-expense-sticky-actions .btn.primary{background:var(--bb-green)!important}
+body.bb-expense-mobile-body .success-card{margin-bottom:8px!important;padding:10px!important}
+body.bb-expense-mobile-body .success-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
+
+/* mobile modals become bottom sheets */
+body.bb-expense-mobile-body .payee-modal-overlay,
+body.bb-expense-mobile-body .payment-overlay,
+body.bb-expense-mobile-body .batch-overlay{align-items:end!important;padding:0!important}
+body.bb-expense-mobile-body .payee-modal,
+body.bb-expense-mobile-body .payment-modal,
+body.bb-expense-mobile-body .batch-modal{width:100%!important;max-height:92dvh!important;border-radius:18px 18px 0 0!important}
+body.bb-expense-mobile-body .payee-modal-head,
+body.bb-expense-mobile-body .payment-modal-head,
+body.bb-expense-mobile-body .batch-modal-head{padding:11px 12px!important}
+body.bb-expense-mobile-body .payee-modal-body,
+body.bb-expense-mobile-body .payment-modal-body,
+body.bb-expense-mobile-body .batch-modal-body{padding:10px 10px calc(12px + env(safe-area-inset-bottom))!important}
+
+@media(max-width:430px){
+  body.bb-expense-mobile-body .app{padding:5px 5px 84px!important}
+  body.bb-expense-mobile-body .grid-2{grid-template-columns:1fr 1fr!important;gap:6px!important}
+  body.bb-expense-mobile-body .type-btn{font-size:7.5px!important}
+  body.bb-expense-mobile-body input,
+  body.bb-expense-mobile-body select,
+  body.bb-expense-mobile-body textarea{font-size:13px!important}
+}
+@media(max-width:345px){
+  body.bb-expense-mobile-body .grid-2{grid-template-columns:1fr!important}
+  body.bb-expense-mobile-body .field.full{grid-column:auto!important}
+  body.bb-expense-mobile-body .bb-expense-note-details{grid-column:auto!important}
+}
