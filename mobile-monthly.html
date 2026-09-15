@@ -4,16 +4,66 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BIG BROTHER — Monthly Expense Mobile</title>
-<style>
-html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,Helvetica,sans-serif}
-.bb-boot{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:#eef3f8}
-.bb-boot.hide{display:none}.bb-boot-card{max-width:360px;padding:18px 22px;border:1px solid #dce5ef;border-radius:14px;background:#fff;color:#173f77;font-weight:900;text-align:center;box-shadow:0 8px 30px #173a6615}.bb-boot-card div{margin-top:5px;color:#6d7f93;font-size:10px;font-weight:700}
-#monthlyExpenseFrame{display:none;width:100%;height:100vh;height:100dvh;border:0;background:#eef3f8}
-</style>
+<link rel="stylesheet" href="mobile-monthly.css?v=20260916-5">
+<script src="supabase-expenses-adapter.js?v=20260912-2"></script>
 </head>
 <body>
-<div id="boot" class="bb-boot"><div id="bootCard" class="bb-boot-card">Loading Monthly Expense…<div>Mobile · Secure Supabase</div></div></div>
-<iframe id="monthlyExpenseFrame" title="Monthly Expense"></iframe>
-<script src="mobile-monthly.js?v=20260916-4"></script>
+<main class="app">
+  <header class="mobile-head">
+    <div>
+      <strong>Monthly Expense</strong>
+      <span>Category totals · tap View Expenses to drill down</span>
+    </div>
+    <button id="topRefreshBtn" type="button" aria-label="Refresh">↻</button>
+  </header>
+
+  <section class="period-card">
+    <button id="prevMonthBtn" class="nav-btn" type="button" aria-label="Previous month">‹</button>
+    <label class="month-field">
+      <span>Month</span>
+      <input id="reportMonth" type="month">
+    </label>
+    <button id="nextMonthBtn" class="nav-btn" type="button" aria-label="Next month">›</button>
+    <button id="refreshBtn" class="nav-btn" type="button" aria-label="Refresh">↻</button>
+    <label class="zero-toggle">
+      <input id="showZeroCategories" type="checkbox">
+      <span>Show Zero Categories</span>
+    </label>
+  </section>
+
+  <div id="errorBox" class="error-box" hidden></div>
+  <div id="loadingBox" class="loading-box">Loading Monthly Expense…</div>
+
+  <section class="kpi-grid" id="kpiGrid" hidden>
+    <article class="kpi total"><small>Total Monthly Expense</small><strong id="monthlyTotal">$0.00</strong></article>
+    <article class="kpi"><small>Operating Expense</small><strong id="operatingTotal">$0.00</strong></article>
+    <article class="kpi"><small>Non-Operating Expense</small><strong id="nonOperatingTotal">$0.00</strong></article>
+    <article class="kpi"><small>Capital Expense</small><strong id="capitalTotal">$0.00</strong></article>
+    <article class="kpi"><small>Expense Records</small><strong id="recordCount">0</strong></article>
+  </section>
+
+  <section id="reportSections"></section>
+
+  <section id="grandTotalCard" class="grand-total" hidden>
+    <span>TOTAL MONTHLY EXPENSE</span>
+    <strong id="grandTotal">$0.00</strong>
+  </section>
+  <div id="reportMeta" class="report-meta"></div>
+</main>
+
+<div id="categorySheet" class="sheet-overlay" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="categoryTitle">
+    <header class="sheet-head">
+      <div>
+        <strong id="categoryTitle">Category Expenses</strong>
+        <span id="categoryMeta"></span>
+      </div>
+      <button id="categoryCloseBtn" type="button" aria-label="Close">×</button>
+    </header>
+    <div id="categoryList" class="transaction-list"></div>
+  </section>
+</div>
+
+<script src="mobile-monthly.js?v=20260916-5"></script>
 </body>
 </html>
