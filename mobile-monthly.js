@@ -1,31 +1,81 @@
-/* BIG BROTHER — Monthly Expense Mobile V1.2 */
-(async function(){
+/* BIG BROTHER — Monthly Expense Mobile V1.3 */
+(function(){
 'use strict';
 const frame=document.getElementById('monthlyExpenseFrame');
 const boot=document.getElementById('boot');
 const bootCard=document.getElementById('bootCard');
-let injected=false;
+let shown=false;
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function showError(message){bootCard.innerHTML='Could not open Monthly Expense<div>'+esc(message||'Unknown error')+'</div>'}
-async function applyAccess(doc,win){const api=win.BBExpensesAdapter;if(!api?.rpc)throw new Error('Expenses connection is not ready.');const access=await api.rpc('bb_expense_mobile_monthly_access');if(access?.canView!==true)throw new Error('You do not have permission to view Monthly Expense.');doc.body.classList.add('bb-monthly-mobile')}
-function canonicalType(v){const s=String(v||'').toUpperCase();if(s.includes('NON-OPERATING'))return 'NON-OPERATING EXPENSE';if(s.includes('CAPITAL'))return 'CAPITAL EXPENSE';if(s.includes('OPERATING'))return 'OPERATING EXPENSE';return s.replace(/[^A-Z -]/g,'').trim()}
-function closeCategorySheet(doc){const sheet=doc.getElementById('bbMonthlyCategorySheet');if(sheet)sheet.hidden=true;doc.body.classList.remove('bb-monthly-sheet-open')}
-function ensureCategorySheet(doc){let sheet=doc.getElementById('bbMonthlyCategorySheet');if(sheet)return sheet;sheet=doc.createElement('div');sheet.id='bbMonthlyCategorySheet';sheet.className='bb-monthly-category-overlay';sheet.hidden=true;sheet.innerHTML='<div class="bb-monthly-category-sheet"><div class="bb-monthly-category-head"><div><strong id="bbMonthlyCategoryTitle">Category Expenses</strong><span id="bbMonthlyCategoryMeta"></span></div><button type="button" data-bb-close>×</button></div><div id="bbMonthlyCategoryList" class="bb-monthly-category-list"></div></div>';doc.body.appendChild(sheet);sheet.querySelector('[data-bb-close]').onclick=()=>closeCategorySheet(doc);sheet.onclick=e=>{if(e.target===sheet)closeCategorySheet(doc)};return sheet}
-function sourceRows(doc,type,category){const body=doc.getElementById('detailRows');if(!body)return[];return Array.from(body.querySelectorAll(':scope>tr')).map(tr=>Array.from(tr.children)).filter(c=>c.length>=10&&canonicalType(c[2].textContent)===canonicalType(type)&&String(c[3].textContent||'').trim().toLowerCase()===String(category||'').trim().toLowerCase())}
-function openCategorySheet(doc,type,category,total){const sheet=ensureCategorySheet(doc);const rows=sourceRows(doc,type,category);sheet.querySelector('#bbMonthlyCategoryTitle').textContent=category||'Category Expenses';sheet.querySelector('#bbMonthlyCategoryMeta').textContent=(canonicalType(type).replace(/\b\w/g,c=>c.toUpperCase()))+' · '+rows.length+' expense'+(rows.length===1?'':'s')+(total?' · '+total:'');const list=sheet.querySelector('#bbMonthlyCategoryList');if(!rows.length){list.innerHTML='<div class="bb-monthly-category-empty">No expense transactions found for this category in the selected month.</div>'}else{list.innerHTML=rows.map(c=>{const id=c[0].textContent.trim(),date=c[1].textContent.trim(),desc=c[4].textContent.trim()||'-',payee=c[5].textContent.trim()||'-',amount=c[6].textContent.trim()||'$0.00',status=c[7].textContent.trim()||'-',method=c[8].textContent.trim()||'-',ref=c[9].textContent.trim()||'-';return '<article class="bb-monthly-category-expense"><div class="bb-monthly-category-expense-top"><div><strong>'+esc(amount)+'</strong><small>'+esc(date)+' · '+esc(status)+'</small></div><span>'+esc(id)+'</span></div><div class="bb-monthly-category-desc">'+esc(desc)+'</div><div class="bb-monthly-category-meta"><div><small>Payee</small><b>'+esc(payee)+'</b></div><div><small>Payment</small><b>'+esc(method)+'</b></div><div class="full"><small>Reference</small><b>'+esc(ref)+'</b></div></div></article>'}).join('')}sheet.hidden=false;doc.body.classList.add('bb-monthly-sheet-open')}
-function decorateCategories(doc){const box=doc.getElementById('reportSections');if(!box)return;box.querySelectorAll('.type-section').forEach(section=>{const type=canonicalType(section.querySelector('.type-head strong')?.textContent||'');section.querySelectorAll('.category-table tbody tr:not(.total-row)').forEach(row=>{const cells=Array.from(row.children);if(cells.length<3)return;const category=String(cells[0].childNodes[0]?.textContent||cells[0].textContent||'').trim();const total=String(cells[2].textContent||'').trim();let existing=row.querySelector('.category-view-btn,.bb-view-category-expenses,[data-view-category]');if(existing){const btn=existing.cloneNode(true);existing.replaceWith(btn);row.dataset.bbCategoryReady='1';btn.classList.add('bb-view-category-expenses');btn.textContent='View Expenses';if(!btn.disabled)btn.onclick=e=>{e.preventDefault();e.stopPropagation();openCategorySheet(doc,type,category,total)};return}if(row.dataset.bbCategoryReady==='1')return;row.dataset.bbCategoryReady='1';cells[0].dataset.bbCategory=category;const btn=doc.createElement('button');btn.type='button';btn.className='bb-view-category-expenses';btn.textContent='View Expenses';btn.onclick=()=>openCategorySheet(doc,type,category,total);cells[0].appendChild(btn)})})}
-function inject(){let doc,win;try{doc=frame.contentDocument||frame.contentWindow.document;win=frame.contentWindow}catch(_){return}if(!doc?.head||!doc?.body)return;
-  if(!doc.getElementById('bb-monthly-mobile-css')){const link=doc.createElement('link');link.id='bb-monthly-mobile-css';link.rel='stylesheet';link.href='mobile-monthly.css?v=20260916-2';doc.head.appendChild(link)}
-  const app=doc.querySelector('.app');const firstCard=app?.querySelector('.card');const toolbar=doc.querySelector('.toolbar');const detailRows=doc.getElementById('detailRows');const reportSections=doc.getElementById('reportSections');if(!app||!firstCard||!toolbar||!detailRows||!reportSections)return;
-  const detailCard=detailRows.closest('.card');if(detailCard)detailCard.classList.add('bb-monthly-detail-source');
-  ensureCategorySheet(doc);
-  if(!doc.getElementById('bbMonthlyMobileHead')){const h=doc.createElement('div');h.id='bbMonthlyMobileHead';h.className='bb-monthly-mobile-head';h.innerHTML='<div><strong>Monthly Expense</strong><span>Category totals · tap View Expenses to drill down</span></div><button type="button" data-bb-refresh>↻</button>';app.insertBefore(h,app.firstChild);h.querySelector('[data-bb-refresh]').onclick=()=>doc.getElementById('refreshBtn')?.click()}
-  const prev=doc.getElementById('prevMonthBtn'),next=doc.getElementById('nextMonthBtn'),refresh=doc.getElementById('refreshBtn');if(prev&&!prev.dataset.bbMobileText){prev.dataset.bbMobileText='1';prev.textContent='‹';prev.title='Previous Month'}if(next&&!next.dataset.bbMobileText){next.dataset.bbMobileText='1';next.textContent='›';next.title='Next Month'}if(refresh&&!refresh.dataset.bbMobileText){refresh.dataset.bbMobileText='1';refresh.textContent='↻';refresh.title='Refresh'}
-  decorateCategories(doc);if(!reportSections.dataset.bbMobileObserved){reportSections.dataset.bbMobileObserved='1';new win.MutationObserver(()=>{closeCategorySheet(doc);decorateCategories(doc)}).observe(reportSections,{childList:true,subtree:true})}
-  if(!doc.body.dataset.bbMonthlyEscape){doc.body.dataset.bbMonthlyEscape='1';doc.addEventListener('keydown',e=>{if(e.key==='Escape')closeCategorySheet(doc)})}
-  if(!injected){injected=true;applyAccess(doc,win).then(()=>{boot.classList.add('hide');frame.style.display='block'}).catch(error=>showError(error?.message||error));}else{boot.classList.add('hide');frame.style.display='block'}
+function showError(message){bootCard.innerHTML='Could not open Monthly Expense<div>'+esc(message||'The live report did not finish loading.')+'</div>'}
+function decorateCategories(doc){
+  const box=doc.getElementById('reportSections');
+  if(!box)return;
+  box.querySelectorAll('.category-table tbody tr:not(.total-row)').forEach(row=>{
+    const cells=Array.from(row.children);
+    const btn=row.querySelector('.category-view-btn,[data-view-category]');
+    if(cells.length<4||!btn)return;
+    btn.classList.add('bb-view-category-expenses');
+    btn.textContent='View Expenses';
+    if(btn.parentElement!==cells[0])cells[0].appendChild(btn);
+    row.classList.add('bb-mobile-category-row');
+  });
 }
-frame.addEventListener('load',()=>{setTimeout(inject,80);setTimeout(inject,350);setTimeout(inject,900)});
-frame.src='monthly-report.html?embed=1&mobileSkin=1&v=20260916-3';
-setTimeout(()=>{if(!boot.classList.contains('hide')){try{inject()}catch(_){}}},1800);
+function reveal(doc){
+  doc.body.classList.add('bb-monthly-mobile');
+  boot.classList.add('hide');
+  frame.style.display='block';
+  shown=true;
+}
+function inject(){
+  let doc,win;
+  try{doc=frame.contentDocument||frame.contentWindow.document;win=frame.contentWindow}catch(_){return false}
+  if(!doc?.head||!doc?.body)return false;
+  if(!doc.getElementById('bb-monthly-mobile-css')){
+    const link=doc.createElement('link');
+    link.id='bb-monthly-mobile-css';
+    link.rel='stylesheet';
+    link.href='mobile-monthly.css?v=20260916-4';
+    doc.head.appendChild(link);
+  }
+  const app=doc.querySelector('.app');
+  const toolbar=doc.querySelector('.toolbar');
+  const reportSections=doc.getElementById('reportSections');
+  if(!app||!toolbar||!reportSections)return false;
+  doc.body.classList.add('bb-monthly-mobile');
+  const detailSource=doc.querySelector('.report-detail-source');
+  if(detailSource)detailSource.classList.add('bb-monthly-detail-source');
+  if(!doc.getElementById('bbMonthlyMobileHead')){
+    const h=doc.createElement('div');
+    h.id='bbMonthlyMobileHead';
+    h.className='bb-monthly-mobile-head';
+    h.innerHTML='<div><strong>Monthly Expense</strong><span>Category totals · tap View Expenses to drill down</span></div><button type="button" data-bb-refresh>↻</button>';
+    app.insertBefore(h,app.firstChild);
+    h.querySelector('[data-bb-refresh]').onclick=()=>doc.getElementById('refreshBtn')?.click();
+  }
+  const prev=doc.getElementById('prevMonthBtn');
+  const next=doc.getElementById('nextMonthBtn');
+  const refresh=doc.getElementById('refreshBtn');
+  if(prev&&!prev.dataset.bbMobileText){prev.dataset.bbMobileText='1';prev.textContent='‹';prev.title='Previous Month'}
+  if(next&&!next.dataset.bbMobileText){next.dataset.bbMobileText='1';next.textContent='›';next.title='Next Month'}
+  if(refresh&&!refresh.dataset.bbMobileText){refresh.dataset.bbMobileText='1';refresh.textContent='↻';refresh.title='Refresh'}
+  decorateCategories(doc);
+  if(!reportSections.dataset.bbMobileObserved){
+    reportSections.dataset.bbMobileObserved='1';
+    new win.MutationObserver(()=>decorateCategories(doc)).observe(reportSections,{childList:true,subtree:true});
+  }
+  reveal(doc);
+  return true;
+}
+function retrySeries(){[60,180,420,800,1400,2400,4000].forEach(ms=>setTimeout(()=>{try{inject()}catch(_){}},ms))}
+frame.addEventListener('load',retrySeries);
+frame.src='monthly-report.html?embed=1&mobileSkin=1&v=20260916-4';
+retrySeries();
+setTimeout(()=>{
+  if(shown)return;
+  try{
+    const doc=frame.contentDocument||frame.contentWindow.document;
+    const innerError=doc?.getElementById('errorBox');
+    showError(innerError&&!innerError.hidden&&innerError.textContent.trim()?innerError.textContent.trim():'The Monthly Expense engine did not finish loading.');
+  }catch(_){showError('The Monthly Expense engine did not finish loading.')}
+},6500);
 })();
