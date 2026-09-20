@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIG BROTHER — Daily Cash</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#eef3f8;color:#193b63}
+body{padding:18px}
+button,input,textarea{font:inherit}
+.shell{max-width:1180px;margin:0 auto}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:.8px;color:#73859a}
+h1{margin:4px 0 4px;font-size:25px;color:#0f4384}
+.sub{margin:0;color:#6a7d91;font-size:12px;line-height:1.45}
+.refresh{border:1px solid #ccd9e7;background:#fff;color:#244d78;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:14px}
+.card{background:#fff;border:1px solid #d7e2ee;border-radius:14px;padding:15px;box-shadow:0 8px 24px rgba(20,48,82,.06)}
+.card small{display:block;color:#788b9f;font-size:10px;font-weight:800;margin-bottom:7px}
+.card strong{display:block;font-size:22px;color:#173f77}
+.card.daily{border-top:3px solid #2373d6}
+.card.vault{border-top:3px solid #8c6c2e}
+.panel{background:#fff;border:1px solid #d7e2ee;border-radius:14px;box-shadow:0 8px 24px rgba(20,48,82,.06);overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #e4ebf3}
+.panel-head h2{margin:0;font-size:16px;color:#17457a}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:900;cursor:pointer}
+.btn.primary{background:#145fc2;color:#fff}
+.btn.secondary{background:#eaf0f6;color:#36536f}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:10px 12px;border-bottom:1px solid #edf2f6;text-align:left;font-size:11px;vertical-align:top}
+th{background:#f7f9fc;color:#61758b;font-size:9px;text-transform:uppercase;letter-spacing:.35px;position:sticky;top:0}
+td strong{color:#203f63}
+.money{text-align:right;font-weight:900}
+.in{color:#13733f}.out{color:#a33b2a}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900}
+.pill.in{background:#e9f7ef}.pill.out{background:#fff0ed}
+.empty{padding:32px;text-align:center;color:#71859a;font-size:12px}
+.status{margin:10px 0 0;color:#708398;font-size:10px}
+.overlay{position:fixed;inset:0;z-index:1000;background:rgba(7,24,44,.68);display:grid;place-items:center;padding:16px;backdrop-filter:blur(6px)}
+.overlay[hidden]{display:none}
+.modal{width:min(450px,100%);background:#fff;border-radius:16px;padding:17px;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.modal-head{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.modal-head h2{margin:3px 0 0;font-size:19px;color:#17457a}
+.close{border:0;background:#edf2f7;color:#405a76;border-radius:9px;width:36px;height:36px;font-size:20px;font-weight:900}
+.balance-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.balance-box{border:1px solid #dce6ef;border-radius:10px;padding:10px;background:#f8fbfe}
+.balance-box small{display:block;color:#71859a;font-size:9px;margin-bottom:4px}.balance-box strong{font-size:15px;color:#173f77}
+.field{margin-top:10px}.field label{display:block;font-size:10px;font-weight:900;color:#4f6780;margin-bottom:5px}
+.field input,.field textarea{width:100%;border:1px solid #cbd9e7;border-radius:10px;padding:11px 12px;outline:none;background:#fff}
+.field input:focus,.field textarea:focus{border-color:#2b73c9;box-shadow:0 0 0 3px rgba(43,115,201,.1)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:15px}
+.error{min-height:16px;margin-top:8px;color:#b43b2c;font-size:10px;font-weight:700}
+.notice{margin-bottom:14px;padding:10px 12px;border-radius:10px;background:#eef7ff;border:1px solid #cce2f8;color:#365b7d;font-size:10px;line-height:1.45}
+@media(max-width:780px){
+ body{padding:11px}
+ .cards{grid-template-columns:1fr 1fr}
+ .head{align-items:center}
+ h1{font-size:21px}
+ .card strong{font-size:19px}
+}
+@media(max-width:430px){
+ .cards{grid-template-columns:1fr 1fr;gap:8px}
+ .card{padding:12px}
+ .grid2,.modal-actions{grid-template-columns:1fr}
+ .panel-head{align-items:flex-start;flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="head">
+    <div>
+      <div class="eyebrow">BIG BROTHER CASH MANAGEMENT</div>
+      <h1>Daily Cash</h1>
+      <p class="sub">Operating cash funded from Cash Vault. Cash-paid expenses reduce this balance automatically.</p>
+    </div>
+    <button class="refresh" id="refreshBtn" type="button">↻ Refresh</button>
+  </div>
+
+  <div class="notice">
+    Daily Cash is a ledger, not a manually edited balance. Cash Vault withdrawals create <strong>IN</strong> entries; expenses paid by <strong>Cash</strong> create <strong>OUT</strong> entries.
+  </div>
+
+  <div class="cards">
+    <div class="card daily"><small>DAILY CASH USD</small><strong id="dailyUSD">$0.00</strong></div>
+    <div class="card daily"><small>DAILY CASH KHR</small><strong id="dailyKHR">៛0</strong></div>
+    <div class="card vault"><small>CASH VAULT USD</small><strong id="vaultUSD">$0.00</strong></div>
+    <div class="card vault"><small>CASH VAULT KHR</small><strong id="vaultKHR">៛0</strong></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Daily Cash Ledger</h2>
+        <div class="status" id="status">Loading live balance…</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="withdrawBtn" type="button">＋ Withdraw from Cash Vault</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Type</th><th>Source</th><th>Reference</th>
+            <th>Currency</th><th class="money">Amount</th><th>Note</th><th>By</th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" hidden>No Daily Cash movements yet.</div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="withdrawOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div><div class="eyebrow">CASH VAULT → DAILY CASH</div><h2>Withdraw from Cash Vault</h2></div>
+      <button class="close" id="closeWithdraw" type="button">×</button>
+    </div>
+
+    <div class="balance-strip">
+      <div class="balance-box"><small>Vault USD Available</small><strong id="modalVaultUSD">$0.00</strong></div>
+      <div class="balance-box"><small>Vault KHR Available</small><strong id="modalVaultKHR">៛0</strong></div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>USD Amount</label>
+        <input id="withdrawUSD" type="number" min="0" step="0.01" inputmode="decimal" value="0">
+      </div>
+      <div class="field">
+        <label>KHR Amount</label>
+        <input id="withdrawKHR" type="number" min="0" step="100" inputmode="decimal" value="0">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Exchange Rate <span style="font-weight:500">(required when KHR is used)</span></label>
+      <input id="withdrawRate" type="number" min="0" step="1" inputmode="decimal" placeholder="Example: 4100">
+    </div>
+
+    <div class="field">
+      <label>Note</label>
+      <textarea id="withdrawNote" rows="2" placeholder="Daily operating cash"></textarea>
+    </div>
+
+    <div class="error" id="withdrawError"></div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancelWithdraw" type="button">Cancel</button>
+      <button class="btn primary" id="confirmWithdraw" type="button">Transfer to Daily Cash</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
+const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
+const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
+const $=id=>document.getElementById(id);
+
+let session=null;
+let dashboard={usd:0,khr:0,vaultUSD:0,vaultKHR:0,canTransfer:false,entries:[]};
+let refreshTimer=null;
+
+function clean(v){return String(v==null?'':v).trim()}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function esc(v){return clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function money(v,currency){
+  const n=num(v),cur=clean(currency).toUpperCase()||'USD';
+  return cur==='KHR'
+    ? '៛'+Math.round(n).toLocaleString('en-US')
+    : '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
+function saveSession(value){
+  session=value||null;
+  try{
+    if(!value){localStorage.removeItem(SESSION_KEY);return}
+    if(!value.expires_at&&value.expires_in)value.expires_at=Math.floor(Date.now()/1000)+Number(value.expires_in);
+    localStorage.setItem(SESSION_KEY,JSON.stringify(value));
+  }catch(_){}
+}
+async function parse(response){
+  const text=await response.text();let data={};
+  try{data=text?JSON.parse(text):{}}catch(_){data={message:text}}
+  if(!response.ok||data?.success===false)throw new Error(data?.message||data?.error||('Request failed ('+response.status+')'));
+  return data;
+}
+async function refreshSession(){
+  const current=readSession();
+  if(!current?.refresh_token)throw new Error('Please sign in to BIG BROTHER.');
+  const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
+    method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({refresh_token:current.refresh_token}),cache:'no-store'
+  });
+  const next=await parse(r);saveSession(next);return next;
+}
+async function ensureSession(){
+  session=readSession();
+  if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER.');
+  if(session.expires_at&&Number(session.expires_at)<Math.floor(Date.now()/1000)+45)await refreshSession();
+  return session;
+}
+async function rpc(fn,args={},retry=true){
+  await ensureSession();
+  const request=()=>fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
+    body:JSON.stringify(args||{}),cache:'no-store'
+  });
+  let r=await request();
+  if(r.status===401&&retry){await refreshSession();r=await request()}
+  return parse(r);
+}
+function fmtDate(value){
+  if(!value)return '-';
+  try{return new Date(value).toLocaleString(undefined,{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
+  catch(_){return clean(value)}
+}
+function render(){
+  $('dailyUSD').textContent=money(dashboard.usd,'USD');
+  $('dailyKHR').textContent=money(dashboard.khr,'KHR');
+  $('vaultUSD').textContent=dashboard.canTransfer?money(dashboard.vaultUSD,'USD'):'—';
+  $('vaultKHR').textContent=dashboard.canTransfer?money(dashboard.vaultKHR,'KHR'):'—';
+  $('withdrawBtn').hidden=!dashboard.canTransfer;
+
+  const rows=Array.isArray(dashboard.entries)?dashboard.entries:[];
+  $('emptyState').hidden=rows.length>0;
+  $('ledgerBody').innerHTML=rows.map(row=>{
+    const type=clean(row.type).toUpperCase();
+    return '<tr>'+
+      '<td>'+esc(fmtDate(row.date))+'</td>'+
+      '<td><span class="pill '+(type==='IN'?'in':'out')+'">'+esc(type)+'</span></td>'+
+      '<td><strong>'+esc(row.source||'-')+'</strong></td>'+
+      '<td>'+esc(row.referenceId||'-')+'</td>'+
+      '<td>'+esc(row.currency||'-')+'</td>'+
+      '<td class="money '+(type==='IN'?'in':'out')+'">'+(type==='IN'?'+ ':'- ')+esc(money(row.amount,row.currency))+'</td>'+
+      '<td>'+esc(row.note||'-')+'</td>'+
+      '<td>'+esc(row.createdBy||'-')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+async function load(showLoading=true){
+  if(showLoading)$('status').textContent='Loading live balance…';
+  try{
+    dashboard=await rpc('bb_daily_cash_dashboard',{p_limit:150});
+    render();
+    $('status').textContent='Live from BIG BROTHER Database · '+new Date().toLocaleTimeString();
+  }catch(error){
+    $('status').textContent=error?.message||String(error);
+    throw error;
+  }
+}
+function openWithdraw(){
+  $('withdrawError').textContent='';
+  $('withdrawUSD').value='0';
+  $('withdrawKHR').value='0';
+  $('withdrawRate').value='';
+  $('withdrawNote').value='';
+  $('modalVaultUSD').textContent=money(dashboard.vaultUSD,'USD');
+  $('modalVaultKHR').textContent=money(dashboard.vaultKHR,'KHR');
+  $('withdrawOverlay').hidden=false;
+}
+function closeWithdraw(){$('withdrawOverlay').hidden=true}
+async function confirmWithdraw(){
+  const btn=$('confirmWithdraw');
+  const usd=Math.max(0,num($('withdrawUSD').value));
+  const khr=Math.max(0,num($('withdrawKHR').value));
+  const rate=Math.max(0,num($('withdrawRate').value));
+  const note=clean($('withdrawNote').value);
+
+  $('withdrawError').textContent='';
+  if(usd<=0&&khr<=0){$('withdrawError').textContent='Enter USD and/or KHR amount.';return}
+  if(usd>num(dashboard.vaultUSD)+0.000001){$('withdrawError').textContent='USD amount is greater than Cash Vault balance.';return}
+  if(khr>num(dashboard.vaultKHR)+1){$('withdrawError').textContent='KHR amount is greater than Cash Vault balance.';return}
+  if(khr>0&&rate<=0){$('withdrawError').textContent='Exchange Rate is required for KHR.';return}
+
+  btn.disabled=true;btn.textContent='Transferring…';
+  try{
+    const result=await rpc('bb_daily_cash_withdraw_from_vault',{
+      p_payload:{usdAmount:usd,khrAmount:khr,exchangeRate:rate,note}
+    });
+    closeWithdraw();
+    await load(false);
+    $('status').textContent='Transfer '+clean(result.transferId)+' completed · Daily Cash updated';
+  }catch(error){
+    $('withdrawError').textContent=error?.message||String(error);
+  }finally{
+    btn.disabled=false;btn.textContent='Transfer to Daily Cash';
+  }
+}
+
+$('refreshBtn').onclick=()=>load(true).catch(()=>{});
+$('withdrawBtn').onclick=openWithdraw;
+$('closeWithdraw').onclick=closeWithdraw;
+$('cancelWithdraw').onclick=closeWithdraw;
+$('confirmWithdraw').onclick=confirmWithdraw;
+$('withdrawOverlay').addEventListener('click',event=>{if(event.target===$('withdrawOverlay'))closeWithdraw()});
+
+load(true).catch(()=>{});
+refreshTimer=setInterval(()=>load(false).catch(()=>{}),15000);
+window.addEventListener('beforeunload',()=>clearInterval(refreshTimer));
+})();
+</script>
+</body>
+</html>
