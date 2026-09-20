@@ -104,7 +104,7 @@ function scheduleInject(){
 frame.addEventListener('load',scheduleInject);
 frame.addEventListener('error',function(){showError('Could not load the live Expenses engine.')});
 
-frame.src='index.html?embed=1&view=add-expense&mobileSkin=1&v=20260916-1';
+frame.src='index.html?embed=1&view=add-expense&mobileSkin=1&v=20260920-iosdecimal1';
 scheduleInject();
 
 setTimeout(function(){
