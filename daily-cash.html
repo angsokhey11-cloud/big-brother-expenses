@@ -141,9 +141,9 @@ td strong{color:#203f63}
       </div>
     </div>
 
-    <div class="field">
-      <label>Exchange Rate <span style="font-weight:500">(required when KHR is used)</span></label>
-      <input id="withdrawRate" type="number" min="0" step="1" inputmode="decimal" placeholder="Example: 4100">
+    <div class="balance-box" style="margin-top:10px">
+      <small>Vault KHR Average Rate</small>
+      <strong id="modalVaultAvgRate">0</strong>
     </div>
 
     <div class="field">
@@ -170,7 +170,7 @@ const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const $=id=>document.getElementById(id);
 
 let session=null;
-let dashboard={usd:0,khr:0,vaultUSD:0,vaultKHR:0,canTransfer:false,entries:[]};
+let dashboard={usd:0,khr:0,vaultUSD:0,vaultKHR:0,vaultAverageRate:0,canTransfer:false,entries:[]};
 let refreshTimer=null;
 
 function clean(v){return String(v==null?'':v).trim()}
@@ -266,10 +266,12 @@ function openWithdraw(){
   $('withdrawError').textContent='';
   $('withdrawUSD').value='0';
   $('withdrawKHR').value='0';
-  $('withdrawRate').value='';
   $('withdrawNote').value='';
   $('modalVaultUSD').textContent=money(dashboard.vaultUSD,'USD');
   $('modalVaultKHR').textContent=money(dashboard.vaultKHR,'KHR');
+  $('modalVaultAvgRate').textContent=num(dashboard.vaultAverageRate)>0
+    ?num(dashboard.vaultAverageRate).toLocaleString('en-US',{maximumFractionDigits:2})
+    :'0';
   $('withdrawOverlay').hidden=false;
 }
 function closeWithdraw(){$('withdrawOverlay').hidden=true}
@@ -277,19 +279,18 @@ async function confirmWithdraw(){
   const btn=$('confirmWithdraw');
   const usd=Math.max(0,num($('withdrawUSD').value));
   const khr=Math.max(0,num($('withdrawKHR').value));
-  const rate=Math.max(0,num($('withdrawRate').value));
   const note=clean($('withdrawNote').value);
 
   $('withdrawError').textContent='';
   if(usd<=0&&khr<=0){$('withdrawError').textContent='Enter USD and/or KHR amount.';return}
   if(usd>num(dashboard.vaultUSD)+0.000001){$('withdrawError').textContent='USD amount is greater than Cash Vault balance.';return}
   if(khr>num(dashboard.vaultKHR)+1){$('withdrawError').textContent='KHR amount is greater than Cash Vault balance.';return}
-  if(khr>0&&rate<=0){$('withdrawError').textContent='Exchange Rate is required for KHR.';return}
+  if(khr>0&&num(dashboard.vaultAverageRate)<=0){$('withdrawError').textContent='Vault KHR average rate is unavailable.';return}
 
   btn.disabled=true;btn.textContent='Transferring…';
   try{
     const result=await rpc('bb_daily_cash_withdraw_from_vault',{
-      p_payload:{usdAmount:usd,khrAmount:khr,exchangeRate:rate,note}
+      p_payload:{usdAmount:usd,khrAmount:khr,note}
     });
     closeWithdraw();
     await load(false);
