@@ -4513,6 +4513,7 @@
     $("currencyKHR").classList.toggle("active",next === "KHR");
 
     $("amountSymbol").textContent = next === "KHR" ? "៛" : "$";
+    $("amount").min = next === "KHR" ? "1" : "0.01";
     $("amount").step = next === "KHR" ? "1" : "0.01";
 
     updateConverted();
