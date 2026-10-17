@@ -230,8 +230,12 @@ async function rpc(fn,args={},retry=true){
 }
 function fmtDate(value){
   if(!value)return '-';
-  try{return new Date(value).toLocaleString(undefined,{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
-  catch(_){return clean(value)}
+  const raw=clean(value);
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(iso){const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const m=Number(iso[2]);if(m>=1&&m<=12)return iso[3]+'-'+mons[m-1]+'-'+iso[1];}
+  const date=new Date(raw);
+  if(Number.isNaN(date.getTime()))return raw;
+  return date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Phnom_Penh'}).replace(/ /g,'-')+' '+date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Phnom_Penh'});
 }
 function render(){
   $('dailyUSD').textContent=money(dashboard.usd,'USD');
